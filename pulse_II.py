@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse II
-# last update: September 27th 2017
+# last update: March 13th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -59,6 +59,7 @@ for sequence in data:
 #plt.yscale('log', nonposy='clip')
 plt.ylabel("count")
 plt.xlabel("charge (a.u.)")
+plt.yscale('log')
 plt.hist(charge,bins=100,range=[0,0.1])
 plt.show()
 
@@ -67,6 +68,7 @@ plt.figure(2)
 plt.ylabel("count")
 plt.xlabel("log10(dT) (s)")
 
+"""
 with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
 
     HS14,HS17=pickle.load(hitspool)
@@ -79,7 +81,7 @@ with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hits
     W=np.array([1/float(len(HS14))]*len(HS14))
 
     plt.hist(HS14,bins=100,range=[-8,-1],alpha=0.5,label="Hitspool 2014",weights=W)
-
+"""
 deltatees=np.asarray(deltatees)
 #condition=(deltatees>=-5.6)&(deltatees<=1.e-3)
 #deltatees=deltatees[condition]

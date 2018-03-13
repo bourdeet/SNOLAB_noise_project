@@ -212,11 +212,17 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
 
         time_location=np.zeros(len(header.time['vec']))
         time_location[t]=bound
-        
-        plt.plot(header.time['vec'],data)
-        plt.plot(header.time['vec'],time_location,'r')
-        plt.plot(header.time['vec'],vetolength,'g')
-        plt.plot(header.time['vec'],ispulsevec,'k')
+
+        if len(data)>200000:
+            pt = 200000
+        else:
+            pt = len(data)
+        beg = np.where(data==max(data))[0][0]
+        print beg
+        plt.plot(header.time['vec'][(beg-100000):(beg+100000)],data[(beg-100000):(beg+100000)])
+        plt.plot(header.time['vec'][(beg-100000):(beg+100000)],time_location[(beg-100000):(beg+100000)],'r')
+        plt.plot(header.time['vec'][(beg-100000):(beg+100000)],vetolength[(beg-100000):(beg+100000)],'g')
+        plt.plot(header.time['vec'][(beg-100000):(beg+100000)],ispulsevec[(beg-100000):(beg+100000)],'k')
     
         plt.xlabel("time(s)")
         plt.ylabel("signal(V)")

@@ -62,7 +62,7 @@ if __name__=='__main__':
                         help="Generic name for an output file\n where the data is saved  (.p file)",\
                         default="summary.p")
     
-    parser.add_argument('--debug',dest='DEBUG',help='Enter debug mode: plots subsets of traces',default=False)
+    parser.add_argument('--debug',dest='DEBUG',help='Enter debug mode: plots subsets of traces',action='store_true')
 
     args = parser.parse_args()
 
@@ -133,11 +133,26 @@ if __name__=='__main__':
             print "Importing relevant libraries..."
             
             from trc_tools import *
-
+            print "...done."
+            nfiles = 0
 
             for element in filelist:
                 if element.endswith(".trc"):
+                    nfiles+=1
+                    if nfiles%10==0:
+                        print "processed %i files..."%(nfiles)
+
+                    X = element.split('_')[-1][0:5]
                     
+                    filennum = int(X)
+
+                    # Save one pickle file per input trc file
+                    newinfo,header=load_data_trc(element,debug=args.DEBUG)
+                    pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
+                    # Dump data
+                    pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
+
+                    """
                     if os.path.exists(args.OUTFILE):
                         pulses_info=pickle.load(open(args.OUTFILE,"rb"))
                         newinfo,_=load_data_trc(element,debug=args.DEBUG)
@@ -151,7 +166,7 @@ if __name__=='__main__':
                         print newinfo
                     pulses_info=pulses_info+newinfo
                     pickle.dump(pulses_info,open(args.OUTFILE,"wb"))
-                    
+                    """
                     nsequences+=len(newinfo)
         
         elif filetype.endswith(".csv"):
