@@ -7,3 +7,9 @@ A set of scripts that were made to acquire waveform from several types of oscill
 
 `trc_tool.py` is the library you need to read data saved by a LeCroy Waverunner 104Xi. The data acquisition process of this scope is programmed directly on the scope, which runs on Windows XP...
 
+## Typical waveform acquisition (LeCroy Scope)
+
+To analyze data from a `.trc` file:
+
+1. Use `pulse_analyzer.py` to extract pulse information into a pickle file. This code has been set up to recognize the standard `*` wildcard, so you can specify either a specific file name, or simply the generic name of the run, and the program will automatically find all subfiles for that run.
+
