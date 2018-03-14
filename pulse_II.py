@@ -18,43 +18,57 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-parser = argparse.ArgumentParser(description="pulse II",formatter_class=RawTextHelpFormatter)
-parser.add_argument('-i', '--input',dest='INFILE', help="Input Data (pickle file)",required=True)
+parser = argparse.ArgumentParser(description="pulse II",
+                                 formatter_class=RawTextHelpFormatter)
+parser.add_argument('-i', '--input',
+                    dest='INFILE',
+                    help="Input Data (pickle file)",
+                    required=True)
 
 args = parser.parse_args()
 
-data = pickle.load(open(args.INFILE,"rb"))
+
+# Load data containers
+#---------------------------------------------------------
+
 
 charge=[]
 deltatees=[]
-i=0
-
 npulses=[]
 livetime=[]
 
-for sequence in data:
+for pickled_file in glob.glob(args.INFILE):
+    
+    if 'header' not in pickled_file:
+        
 
-    #if isintance(sequence,header_data):
-        #timescale=sequence.
+        data = pickle.load(open(pickled_file,"rb"))
 
-    # Get rid of a nested list problem
-    if isinstance(sequence,list):
-        sequence=sequence[0]
 
-    if isinstance(sequence,PMT_DAQ_sequence):
-        npulses.append(float(sequence['npulses'])-1)
-        livetime.append(sequence['livetime'])
-        for q in sequence['charge']:
-            if q>2000:
-                print sequence
-            else:
-                charge.append(q)
+        for sequence in data:
 
-        if sequence['npulses']>1:
-            t = np.asarray(sequence['time'])*2.0e-9
-            dT = np.log10(t[1:]-t[:-1])
-            for element in dT:
-                deltatees.append(element)
+            #if isintance(sequence,header_data):
+            #timescale=sequence.
+
+            # Get rid of a nested list problem
+            if isinstance(sequence,list):
+                sequence=sequence[0]
+
+            if isinstance(sequence,PMT_DAQ_sequence):
+                
+                npulses.append(float(sequence['npulses'])-1)
+                livetime.append(sequence['livetime'])
+                for q in sequence['charge']:
+                    if q>2000:
+                        print sequence
+                    else:
+                        charge.append(q)
+
+                if sequence['npulses']>1:
+                    t = np.asarray(sequence['time'])*2.0e-9
+                    dT = np.log10(t[1:]-t[:-1])
+                    for element in dT:
+                        deltatees.append(element)
 
 #plt.yscale('log', nonposy='clip')
 plt.ylabel("count")
