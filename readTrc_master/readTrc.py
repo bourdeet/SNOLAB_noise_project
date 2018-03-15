@@ -2,6 +2,11 @@
 Little helper function to load data from a .trc binary file.
 This is the file format used by LeCroy oscilloscopes.
 M. Betz 09/2015
+
+updated to include trigger time from data recorded in sequence mode
+by Etienne Bourbeau
+
+
 """
 import datetime
 import numpy as np
@@ -24,6 +29,8 @@ def readTrc( fName ):
         y: array with sample  values [V],
         
         d: dictionary with metadata
+
+        t: Trigger times (only for data obtained from sequence mode)
         
         
         M. Betz 09/2015
@@ -44,16 +51,21 @@ def readTrc( fName ):
         else:
             endi = ">"
 
+        print "endian: ",endi
         #------------------------
         # Get length of blocks and arrays:
         #------------------------
         lWAVE_DESCRIPTOR = readX( fid, endi+"l", wdOffset + 36 )
         lUSER_TEXT       = readX( fid, endi+"l", wdOffset + 40 )
         lTRIGTIME_ARRAY  = readX( fid, endi+"l", wdOffset + 48 )
+
+        print "byte size of trig array:",lTRIGTIME_ARRAY
+        
         lRIS_TIME_ARRAY  = readX( fid, endi+"l", wdOffset + 52 )
         lWAVE_ARRAY_1    = readX( fid, endi+"l", wdOffset + 60 )
         lWAVE_ARRAY_2    = readX( fid, endi+"l", wdOffset + 64 )
-
+        
+        print "byte size of data array:",lWAVE_ARRAY_1
         d = dict()  #Will store all the extracted Metadata
         
         #------------------------
@@ -67,6 +79,9 @@ def readTrc( fName ):
         # Get Waveform info      
         #------------------------
         d["WAVE_ARRAY_COUNT"] = readX( fid, endi+"l", wdOffset +116 )
+        
+        print "Total number of points in data: ",d['WAVE_ARRAY_COUNT']
+        
         d["PNTS_PER_SCREEN"]  = readX( fid, endi+"l", wdOffset +120 )
         d["FIRST_VALID_PNT"]  = readX( fid, endi+"l", wdOffset +124 )
         d["LAST_VALID_PNT"]   = readX( fid, endi+"l", wdOffset +128 )
@@ -74,6 +89,9 @@ def readTrc( fName ):
         d["SPARSING_FACTOR"]  = readX( fid, endi+"l", wdOffset +136 )
         d["SEGMENT_INDEX"]    = readX( fid, endi+"l", wdOffset +140 )
         d["SUBARRAY_COUNT"]   = readX( fid, endi+"l", wdOffset +144 )
+        
+        print "Detected ",d["SUBARRAY_COUNT"]," sample per sequence."
+        
         d["SWEEPS_PER_ACQ"]   = readX( fid, endi+"l", wdOffset +148 )
         d["POINTS_PER_PAIR"]  = readX( fid, endi+"h", wdOffset +152 )
         d["PAIR_OFFSET"]      = readX( fid, endi+"h", wdOffset +154 )
@@ -104,6 +122,19 @@ def readTrc( fName ):
         d["WAVE_SOURCE"]      = readX( fid, endi+"H", wdOffset +344 )
         d["USER_TEXT"]        = readX( fid, "{0}s".format(lUSER_TEXT), wdOffset + lWAVE_DESCRIPTOR ).decode().split('\x00')[0]
 
+        # Get the trigtime array
+        #------------------------------------------------------
+        if d["SUBARRAY_COUNT"]>1:
+            fid.seek( wdOffset + lWAVE_DESCRIPTOR + lUSER_TEXT)
+
+            #test = struct.unpack_from( "d", fid.read(lTRIGTIME_ARRAY ) )
+
+            trigfmt = np.dtype([(('trigtime'),np.float64),(('offset'),np.float64)])
+
+            test = np.fromfile(fid,trigfmt,lTRIGTIME_ARRAY/16)
+            if endi == ">":
+                test.byteswap( True )
+        
         #------------------------
         # Get main sample data with the help of numpys .fromfile(
         #------------------------
@@ -114,7 +145,7 @@ def readTrc( fName ):
             y.byteswap( True )
         y = d["VERTICAL_GAIN"] * y - d["VERTICAL_OFFSET"]
         x = np.arange(1,len(y)+1)*d["HORIZ_INTERVAL"] + d["HORIZ_OFFSET"]
-    return x, y, d
+    return x, y, test,d
 
 def readX( fid, fmt, adr=None ):
     """ extract a byte / word / float / double from the binary file """
