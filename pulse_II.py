@@ -110,4 +110,4 @@ plt.show()
 
 N=sum(np.asarray(deltatees)>=np.log10(6e-6))
 
-print "pulse Rate for this file: ",N/sum(livetime)," Hz"
+print "livetime for this set of files: ",sum(livetime)," s"
