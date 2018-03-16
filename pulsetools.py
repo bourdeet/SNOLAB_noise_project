@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse analyzer
-# last update: September 6th 2017
+# last update: March 16th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -23,6 +23,7 @@ class header_data:
     def __init__(self):
 
         self.windowscale = {'ymult':0.0,'yzero':0.0,'yoffs':0.0,'xincr':0.0}
+        self.mode = 'unspecified'
         self.nacq=0
         self.data = {'start':1,'stop':1}
         self.time ={'scale':200e-6,'duration':10e-6,'vec':[]}
@@ -230,3 +231,87 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
         plt.show()
     
     return Q,t
+
+
+def find_pulses_array(X,Y,D,sequence_time=None,threshold=0.1,Nsample=3,debug=False):
+
+        #***************  This code assumes a negative pulse convention  ***************
+
+        if sequence_time is None:
+                time = X
+
+        else:
+                # if the data comes from a sequence acquisition,
+                # we expect that the user supplies an adjusted time
+                # array based on the triggering offsets
+                time = sequence_time
+
+        # split into pedestal and non pedestal
+        #-------------------------------------------------------------------
+
+        
+        signal_mask = Y<=threshold 
+        signal   = Y*(signal_mask)
+
+        
+
+        # Compute pedestal
+        #--------------------------------------------------------------------
+        
+        pedestal = Y[~signal_mask]
+        pedestal = np.median(pedestal)
+        signal = signal-pedestal
+
+
+        # Clean signal mask
+        #--------------------------------------------------------------------
+
+        
+        # append a zero at the beginning and end of the signal vector
+        # (to make sure we finish all pulses)
+        signal = np.concatenate([[0],signal,[0]])
+        signal_mask = np.concatenate([[False],signal_mask,[False]])
+
+        # Find the location of the threshold crossings in the array
+        diff = np.diff(signal_mask)
+
+        index, = diff.nonzero()
+        start = index[:-1]
+        intervals = index[1:]-index[0:-1]
+        true_intervals = intervals*(np.arange(0,len(intervals))%2==0)
+        
+        # Select signal regions larger than a certain number of samples
+        true_intervals=true_intervals*(true_intervals>=Nsample)
+
+        pt=[]
+
+        for i in range(0,len(start)):
+
+                if true_intervals[i]!=0:
+
+                        pt.append(np.arange(start[i]+1,start[i]+true_intervals[i]+1))
+
+        
+        pt = np.concatenate(pt)
+
+        selected_pulse=np.zeros(len(signal_mask))
+
+        selected_pulse[pt]=True
+
+        # Now, selected_pulse is the cleaned signal mask that only
+        # keeps pulses that pass the threshold, and have a minimal width
+        # of N samples
+
+
+        pulses = np.split(signal*selected_pulse,start+1)
+
+        charge = np.array([sum(x) for x in pulses])
+        charge = charge[charge!=0]
+
+        # The pulse time tag is defined as the sample time of the first
+        # data point crossing the selected threshold
+        
+        time_indices  = start[np.in1d(start+1,selected_pulse.nonzero())]+1
+        times = time[time_indices]
+
+        return charge,times

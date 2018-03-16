@@ -51,21 +51,18 @@ def readTrc( fName ):
         else:
             endi = ">"
 
-        print "endian: ",endi
         #------------------------
         # Get length of blocks and arrays:
         #------------------------
         lWAVE_DESCRIPTOR = readX( fid, endi+"l", wdOffset + 36 )
         lUSER_TEXT       = readX( fid, endi+"l", wdOffset + 40 )
         lTRIGTIME_ARRAY  = readX( fid, endi+"l", wdOffset + 48 )
-
-        print "byte size of trig array:",lTRIGTIME_ARRAY
-        
         lRIS_TIME_ARRAY  = readX( fid, endi+"l", wdOffset + 52 )
         lWAVE_ARRAY_1    = readX( fid, endi+"l", wdOffset + 60 )
         lWAVE_ARRAY_2    = readX( fid, endi+"l", wdOffset + 64 )
         
-        print "byte size of data array:",lWAVE_ARRAY_1
+
+        
         d = dict()  #Will store all the extracted Metadata
         
         #------------------------
@@ -79,9 +76,6 @@ def readTrc( fName ):
         # Get Waveform info      
         #------------------------
         d["WAVE_ARRAY_COUNT"] = readX( fid, endi+"l", wdOffset +116 )
-        
-        print "Total number of points in data: ",d['WAVE_ARRAY_COUNT']
-        
         d["PNTS_PER_SCREEN"]  = readX( fid, endi+"l", wdOffset +120 )
         d["FIRST_VALID_PNT"]  = readX( fid, endi+"l", wdOffset +124 )
         d["LAST_VALID_PNT"]   = readX( fid, endi+"l", wdOffset +128 )
@@ -89,9 +83,6 @@ def readTrc( fName ):
         d["SPARSING_FACTOR"]  = readX( fid, endi+"l", wdOffset +136 )
         d["SEGMENT_INDEX"]    = readX( fid, endi+"l", wdOffset +140 )
         d["SUBARRAY_COUNT"]   = readX( fid, endi+"l", wdOffset +144 )
-        
-        print "Detected ",d["SUBARRAY_COUNT"]," sample per sequence."
-        
         d["SWEEPS_PER_ACQ"]   = readX( fid, endi+"l", wdOffset +148 )
         d["POINTS_PER_PAIR"]  = readX( fid, endi+"h", wdOffset +152 )
         d["PAIR_OFFSET"]      = readX( fid, endi+"h", wdOffset +154 )
@@ -102,7 +93,7 @@ def readTrc( fName ):
         d["NOMINAL_BITS"]     = readX( fid, endi+"h", wdOffset +172 )
         d["NOM_SUBARRAY_COUNT"]= readX( fid, endi+"h",wdOffset +174 )
         d["HORIZ_INTERVAL"]   = readX( fid, endi+"f", wdOffset +176 ) #sampling interval for time domain waveforms 
-        d["HORIZ_OFFSET"]     = readX( fid, endi+"d", wdOffset +180 ) #trigger offset for the first sweep of the trigger, seconds between the trigger and the first data point 
+        d["HORIZ_OFFSET"]     = readX( fid, endi+"d", wdOffset +180 ) #offset (s) between trigger and 1st data pt 
         d["PIXEL_OFFSET"]     = readX( fid, endi+"d", wdOffset +188 )
         d["VERTUNIT"]         = readX( fid, "48s", wdOffset +196 ).decode().split('\x00')[0]
         d["HORUNIT"]          = readX( fid, "48s", wdOffset +244 ).decode().split('\x00')[0]
@@ -124,14 +115,18 @@ def readTrc( fName ):
 
         # Get the trigtime array
         #------------------------------------------------------
+        #
+        # trigtime: time (s) between a triggered trace and the first trace of the sequence
+        #
+        # offset: time (s) between frist data point of the trace and the current trigger
+        #
+        T=[]
         if d["SUBARRAY_COUNT"]>1:
             fid.seek( wdOffset + lWAVE_DESCRIPTOR + lUSER_TEXT)
 
-            #test = struct.unpack_from( "d", fid.read(lTRIGTIME_ARRAY ) )
-
             trigfmt = np.dtype([(('trigtime'),np.float64),(('offset'),np.float64)])
-
-            test = np.fromfile(fid,trigfmt,lTRIGTIME_ARRAY/16)
+            T = np.fromfile(fid,trigfmt,lTRIGTIME_ARRAY/16)
+        
             if endi == ">":
                 test.byteswap( True )
         
@@ -145,7 +140,9 @@ def readTrc( fName ):
             y.byteswap( True )
         y = d["VERTICAL_GAIN"] * y - d["VERTICAL_OFFSET"]
         x = np.arange(1,len(y)+1)*d["HORIZ_INTERVAL"] + d["HORIZ_OFFSET"]
-    return x, y, test,d
+        
+    return x, y,T,d
+
 
 def readX( fid, fmt, adr=None ):
     """ extract a byte / word / float / double from the binary file """
