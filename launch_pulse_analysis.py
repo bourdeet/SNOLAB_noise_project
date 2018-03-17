@@ -52,7 +52,7 @@ else:
                                 subfile= open(submitfile,"w")
                                 subfile.write("#!/bin/bash\n")
 
-                        Launch_code=execution_directory+"pulse_analyzer -i %s -o %s/run%04i.p "%(trcfile,output_directory,args.RUNID)
+                        Launch_code=execution_directory+"pulse_analyzer.py -i %s -o %s/run%04i.p "%(trcfile,output_directory,args.RUNID)
 
                         subfile.write(Launch_code)
                         ntotal+=1
