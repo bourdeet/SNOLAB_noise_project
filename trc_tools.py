@@ -11,6 +11,7 @@ def parse_header_trc(trcformat):
         header_container=header_data()
     
         header_container.nacq = trcformat['SUBARRAY_COUNT']
+        header_container.impedance = float(trcformat['VERT_COUPLING'].split('_')[1])
 
         if trcformat['SUBARRAY_COUNT']>1:
                 header_container.mode='sequence'
@@ -67,8 +68,9 @@ def load_data_trc(inputname,threshold,debug=False):
                 pedestal=compute_pedestal(Y)
 
     
-                Y=-(Y-pedestal[0])
-                charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=False,debug=debug)
+                Y=(Y-pedestal[0])
+                charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=True,debug=debug)
+                #charge,times = find_pulses_array(X,Y,D,threshold=threshold,Nsample=3,debug=debug)
     
                 seq_info['charge']=charge
                 seq_info['time']=times
@@ -81,13 +83,12 @@ def load_data_trc(inputname,threshold,debug=False):
 
                 trace_length = D['WAVE_ARRAY_COUNT']/D['SUBARRAY_COUNT']
                 adjusted_time = (np.arange(0,len(X))%trace_length)*D['HORIZ_INTERVAL']
-                
                 trigtime_mapping = np.repeat(T['trigtime'],trace_length)  
                 offset_mapping = np.repeat(T['offset'],trace_length)
 
                 adjusted_time = adjusted_time+trigtime_mapping+offset_mapping
 
-                charge,times = find_pulses_array(X,Y,D,sequence_time=adjusted_time,threshold,Nsample=3,debug=debug)
+                charge,times = find_pulses_array(X,Y,D,sequence_time=adjusted_time,threshold=threshold,Nsample=3,debug=debug)
 
                 seq_info['charge']=charge
                 seq_info['time']=times

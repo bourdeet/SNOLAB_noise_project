@@ -147,7 +147,7 @@ if __name__=='__main__':
                     filennum = int(X)
 
                     # Save one pickle file per input trc file
-                    newinfo,header=load_data_trc(element,debug=args.DEBUG)
+                    newinfo,header=load_data_trc(element,threshold=-0.0025,debug=args.DEBUG)
                     pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                     # Dump data
                     pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
@@ -167,6 +167,7 @@ if __name__=='__main__':
                     pulses_info=pulses_info+newinfo
                     pickle.dump(pulses_info,open(args.OUTFILE,"wb"))
                     """
+                    
                     nsequences+=len(newinfo)
         
         elif filetype.endswith(".csv"):

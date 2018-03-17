@@ -28,6 +28,7 @@ class header_data:
         self.data = {'start':1,'stop':1}
         self.time ={'scale':200e-6,'duration':10e-6,'vec':[]}
         self.triglvl=0
+        self.impedance=50.0
 
     def __repr__(self):
         return "Window Scale: {}\n# of acquisitions: {}\nData Start: {}\nData Stop: {}\nTime parameters: {}\nTrigger level (V): {}".format(self.windowscale, self.nacq,self.data['start'],self.data['stop'],self.time,self.triglvl)
@@ -113,7 +114,8 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
     # To feed in negative value simply switch the inverted boolean
 
     if Inverted==True:
-        data=-data
+            data=-data
+            threshold=-threshold
         
     N=len(data)
     lowbound=min(data)
@@ -125,6 +127,8 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
     q=0
     qmax=0
     tmax=0
+
+    impedance=header.impedance
     
     ispulse=False
     
@@ -137,6 +141,7 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
     vetolength=[]
     ispulsevec=[]
     timegate=np.zeros(len(data))
+    timeint=header.windowscale['xincr']/1e-9
     
     pulsesize=0
     
@@ -171,7 +176,7 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
                     ispulse=False
                     pulsesize=0
                     veto=True
-                    Q.append(q)
+                    Q.append(q*timeint/impedance*1000)
                     t.append(tmax)
                     
                     q=0
@@ -230,10 +235,10 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
         plt.title("pulse_location")
         plt.show()
     
-    return Q,t
+    return -np.array(Q),np.array(t)*timeint
 
 
-def find_pulses_array(X,Y,D,sequence_time=None,threshold=0.1,Nsample=3,debug=False):
+def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=False):
 
         #***************  This code assumes a negative pulse convention  ***************
 
@@ -246,6 +251,12 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=0.1,Nsample=3,debug=Fal
                 # array based on the triggering offsets
                 time = sequence_time
 
+        # Acquire information from the header:
+        sample_res_ns = D['HORIZ_INTERVAL']/1e-9
+        impedance = float(D['VERT_COUPLING'].split('_')[1])
+
+        
+
         # split into pedestal and non pedestal
         #-------------------------------------------------------------------
 
@@ -255,13 +266,19 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=0.1,Nsample=3,debug=Fal
 
         
 
-        # Compute pedestal
+        # Compute and subtract  pedestal
         #--------------------------------------------------------------------
         
         pedestal = Y[~signal_mask]
         pedestal = np.median(pedestal)
         signal = signal-pedestal
+        
+        if debug==True:
+                plt.plot(X[0:10000],Y[0:10000])
+                plt.show()
 
+                plt.plot(X[0:10000],signal[0:10000])
+                plt.show()
 
         # Clean signal mask
         #--------------------------------------------------------------------
@@ -303,7 +320,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=0.1,Nsample=3,debug=Fal
         # of N samples
 
 
-        pulses = np.split(signal*selected_pulse,start+1)
+        pulses = np.split(signal*selected_pulse*sample_res_ns/impedance*1000,start+1)
 
         charge = np.array([sum(x) for x in pulses])
         charge = charge[charge!=0]
@@ -314,4 +331,4 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=0.1,Nsample=3,debug=Fal
         time_indices  = start[np.in1d(start+1,selected_pulse.nonzero())]+1
         times = time[time_indices]
 
-        return charge,times
+        return -charge,times
