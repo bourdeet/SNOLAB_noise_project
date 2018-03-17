@@ -28,7 +28,7 @@ ntotal=0
 input_directory ="/groups/icecube/bourdeet/SNOLAB/March2018_data/run%04i/"%args.RUNID
 output_directory=input_directory+"/pickled/"
 
-bash_directory=output_directory+"/job_submit/"
+bash_directory=input_directory+"/job_submit/"
 
 execution_directory = "/groups/icecube/bourdeet/SNOLAB/scripts/"
 
@@ -48,7 +48,7 @@ else:
                 if fnmatch.fnmatch(trcfile, '*run%04i*.trc'%(args.RUNID)):
 
                         if ntotal%nfiles_per_job==0:
-                                submitfile=bash_directory+"run%04i_submit_i.sh"%(ntotal/nfiles_per_job)
+                                submitfile=bash_directory+"run%04i_submit_%i.sh"%(args.RUNID,ntotal/nfiles_per_job)
                                 subfile= open(submitfile,"w")
                                 subfile.write("#!/bin/bash\n")
 
