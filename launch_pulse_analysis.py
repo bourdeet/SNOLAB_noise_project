@@ -10,15 +10,33 @@ import sys
 
 parser = argparse.ArgumentParser(description='Create and launch data processing on HPC')
 parser.add_argument('--run', dest="RUNID",help="run number", required=True)
-parser.add_argument('--dir', dest="DIR",help="directory where the hdf5 files are located", required=True)
 args = parser.parse_args()
 
 #Change the name of the directory to one that suits your needs
-output_directory="/groups/icecube/bourdeet/SNOLAB/March201888_data/run%04i/pickled/"%args.RUNID
+input_directory ="/groups/icecube/bourdeet/SNOLAB/March2018_data/run%04i/"%args.RUNID
+output_directory=input_directory+"/pickled/"
+
 bash_directory=output_directory+"/job_submit/"
 
-for file in os.listdir(args.DIR):
-    if fnmatch.fnmatch(file, 'Level3_TRUE__IC86.2012_corsika.0'+args.SIM+'.*.hd5'):
+
+if not os.path.exists(input_directory):
+        sys.exit("ERROR: run data not found in %s"%input_directory)
+
+else:
+
+        if not os.path.exists(output_directory):
+                os.makedirs(output_directory)
+
+                bash_directory=output_directory+"/job_submit/"
+
+        for trcfile in os.listdir(input_directory):
+                if fnmatch.fnmatch(trcfile, '*run%04i*.trc'%(args.RUNID)):
+                        print trcfile
+
+                sys.exit()
+                                   
+
+                                   
 
         outhistogram= file[:-4]+".singlemuons.root"
 
