@@ -18,12 +18,19 @@ parser.add_argument('--run',
 
 args = parser.parse_args()
 
-#Change the name of the directory to one that suits your needs
 
+###########################
+#--# of files per job
+nfiles_per_job = 10
+ntotal=0
+
+#Change the name of the directory to one that suits your needs
 input_directory ="/groups/icecube/bourdeet/SNOLAB/March2018_data/run%04i/"%args.RUNID
 output_directory=input_directory+"/pickled/"
 
 bash_directory=output_directory+"/job_submit/"
+
+execution_directory = "/groups/icecube/bourdeet/SNOLAB/scripts/"
 
 
 if not os.path.exists(input_directory):
@@ -37,35 +44,23 @@ else:
                 bash_directory=output_directory+"/job_submit/"
 
         for trcfile in os.listdir(input_directory):
+                
                 if fnmatch.fnmatch(trcfile, '*run%04i*.trc'%(args.RUNID)):
-                        print trcfile
 
-                sys.exit()
-                                   
+                        if ntotal%nfiles_per_job==0:
+                                submitfile=bash_directory+"run%04i_submit_i.sh"%(ntotal/nfiles_per_job)
+                                subfile= open(submitfile,"w")
+                                subfile.write("#!/bin/bash\n")
 
-                                   
+                        Launch_code=execution_directory+"pulse_analyzer -i %s -o %s/run%04i "%(trcfile,output_directory,args.RUNID)
 
-        outhistogram= file[:-4]+".singlemuons.root"
-
-        identity=file.split(".")[4]
-
-        Launch_code="~/RIDE/histogram_production/RIDE_histogram_truth_barebones.py -i %s -o %s -s %i --hits"%(args.DIR+file,output_directory+outhistogram,int(args.SIM))
-
-        #Add cuts to the processing or not:
-	#Launch_code+=" --all-truth"
-
-
-        submitfile=bash_directory+"histoprod_singlemuon_submit"+identity+".sh"
+                        subfile.write(Launch_code)
+                        ntotal+=1
+                        if ntotal%nfiles_per_job==0:
+                                executive_order="chmod +x %s"%(submitfile)
+                                subprocess.Popen(executive_order.split())
+                                launch_command="sbatch -p icecube %s --mem-per-cpu=3G"%(submitfile)
+                                print launch_command
+                                subprocess.Popen(launch_command.split())
         
-        with open(submitfile,"w") as subfile:
-            subfile.write("#!/bin/bash\n")
-            subfile.write(Launch_code)
- 
-        executive_order="chmod +x %s"%(submitfile)
-        subprocess.Popen(executive_order.split())
-        
-        launch_command="sbatch -p icecube %s --mem-per-cpu=3G"%(submitfile)
-        print launch_command
-        subprocess.Popen(launch_command.split())
-        
-        time.sleep(0.1)
+                                time.sleep(0.1)
