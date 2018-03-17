@@ -9,10 +9,17 @@ import time
 import sys
 
 parser = argparse.ArgumentParser(description='Create and launch data processing on HPC')
-parser.add_argument('--run', dest="RUNID",help="run number", required=True)
+
+parser.add_argument('--run',
+                    dest="RUNID",
+                    type=int,
+                    help="run number",
+                    required=True)
+
 args = parser.parse_args()
 
 #Change the name of the directory to one that suits your needs
+
 input_directory ="/groups/icecube/bourdeet/SNOLAB/March2018_data/run%04i/"%args.RUNID
 output_directory=input_directory+"/pickled/"
 
