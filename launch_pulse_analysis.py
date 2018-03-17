@@ -52,11 +52,12 @@ else:
                                 subfile= open(submitfile,"w")
                                 subfile.write("#!/bin/bash\n")
 
-                        Launch_code=execution_directory+"pulse_analyzer -i %s -o %s/run%04i "%(trcfile,output_directory,args.RUNID)
+                        Launch_code=execution_directory+"pulse_analyzer -i %s -o %s/run%04i.p "%(trcfile,output_directory,args.RUNID)
 
                         subfile.write(Launch_code)
                         ntotal+=1
                         if ntotal%nfiles_per_job==0:
+                                subfile.close()
                                 executive_order="chmod +x %s"%(submitfile)
                                 subprocess.Popen(executive_order.split())
                                 launch_command="sbatch -p icecube %s --mem-per-cpu=3G"%(submitfile)
