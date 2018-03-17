@@ -41,7 +41,7 @@ else:
         if not os.path.exists(output_directory):
                 os.makedirs(output_directory)
 
-                bash_directory=output_directory+"/job_submit/"
+                bash_directory=input_directory+"/job_submit/"
 
         for trcfile in os.listdir(input_directory):
                 
