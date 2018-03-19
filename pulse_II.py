@@ -139,10 +139,33 @@ binning_charge = np.arange(0,0.1,0.001)
 
 # Charge distribution
 plt.ylabel("count")
-plt.xlabel("charge (a.u.)")
+plt.xlabel("charge (pC)")
 plt.yscale('log')
-plt.hist(charge,bins=100,color='g',label='charge method 1',alpha=0.5)
-plt.hist(charge_II,bins=100,color='r',label='charge method 2',alpha=0.5)
+y,x,_=plt.hist(charge,bins=100,color='g',label='charge method 1',alpha=0.5)
+
+dx = (x[1:]-x[0:-1])[0]
+x = x+dx/2
+
+
+
+# Fitting spe peaks
+#-------------------------------------------------------------------------
+
+def gaussian(x,mu,sigma):
+        return 1./(sigma*np.sqrt(np.pi))*exp(-((x-mu)**2.)/(2.*sigma**2.0))
+
+def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
+
+        bkgd = gaussian(x,mu_ped,s_ped)*exp(-mu_exp)
+
+        signal = 0.0
+        for i in range(0,n_pe_max):
+                signal+=gaussian(x,i*mu_1pe,np.sqrt(s_1pe))*poi(i,mu_exp)
+        
+        return signal+bkgd
+
+
+#plt.hist(charge_II,bins=100,color='r',label='charge method 2',alpha=0.5)
 plt.legend()
 plt.show()
 
@@ -163,14 +186,14 @@ with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hits
 
     
 deltatees=np.array(deltatees)
-deltatees_II=np.array(deltatees_II)
+#deltatees_II=np.array(deltatees_II)
 
 V=np.array([1/float(len(deltatees))]*len(deltatees))
-V2=np.array([1/float(len(deltatees_II))]*len(deltatees_II))
+#V2=np.array([1/float(len(deltatees_II))]*len(deltatees_II))
 
 plt.hist(deltatees,bins=binning,alpha=0.5,label="charge method 1",weights=V)
 
-plt.hist(deltatees_II,bins=binning,alpha=0.5,color='r',label="charge method 2",weights=V2)
+#plt.hist(deltatees_II,bins=binning,alpha=0.5,color='r',label="charge method 2",weights=V2)
 plt.legend()
 
 plt.show()
