@@ -156,21 +156,7 @@ if __name__=='__main__':
                     # Dump data
                     pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
 
-                    """
-                    if os.path.exists(args.OUTFILE):
-                        pulses_info=pickle.load(open(args.OUTFILE,"rb"))
-                        newinfo,_=load_data_trc(element,debug=args.DEBUG)
-                    else:
-                        pulses_info=[]
-                        newinfo,header=load_data_trc(element,debug=args.DEBUG)
-                        pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
-
-                        
-                    if args.DEBUG:
-                        print newinfo
-                    pulses_info=pulses_info+newinfo
-                    pickle.dump(pulses_info,open(args.OUTFILE,"wb"))
-                    """
+                    del header,newinfo
                     
                     nsequences+=len(newinfo)
         
