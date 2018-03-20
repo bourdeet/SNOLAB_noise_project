@@ -57,7 +57,7 @@ def parse_header_trc(trcformat):
     
         return header_container
 
-@profile
+
 def load_data_trc(inputname,threshold,debug=False):
 
         #********** Raw data show negative pulses ********
@@ -74,8 +74,8 @@ def load_data_trc(inputname,threshold,debug=False):
 
     
                 Y=(Y-pedestal)
-                charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=True,debug=debug)
-                #charge,times = find_pulses_array(X,Y,D,threshold=threshold,Nsample=3,debug=debug)
+                #charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=True,debug=debug)
+                charge,times = find_pulses_array(X,Y,D,threshold=threshold,Nsample=3,debug=debug)
     
                 seq_info['charge']=charge
                 seq_info['time']=times
