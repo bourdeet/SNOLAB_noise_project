@@ -89,6 +89,7 @@ class PMT_DAQ_sequence:
     def __unicode__(self):
         return unicode(repr(self.__dict__))
 
+@profile
 def compute_pedestal(trace, n=1000):
     
     n_per_slice=len(trace)/n
@@ -107,7 +108,7 @@ def compute_pedestal(trace, n=1000):
 
     return np.mean(pedestal),np.std(trace),fives_threshold
 
-
+@profile
 def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=False):
 
     # The code expects positive, pedestal-subtracted pulses.

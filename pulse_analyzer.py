@@ -9,38 +9,17 @@
 #
 #
 #######################################################
+import argparse
+from argparse import RawTextHelpFormatter
+import numpy as np
+import pickle
+import sys
+import matplotlib.pyplot as plt
+import glob
+import struct
+import os
 
-#
-#Class used for profiling, with results dumped to a file 
-#Use as:
-#  with Profiler("results.txt") as profiler :
-#    ... do stuff ...
-class Profiler :
-  def __init__(self,output_file_path) :
-    self.output_file_path = output_file_path
-  def __enter__(self) :
-    self.start()
-    return self
-  def __exit__(self, exc_type, exc_val, exc_tb) :
-    self.stop()
-  def start(self) :
-    import cProfile
-    self.pr = cProfile.Profile()
-    self.pr.enable()
-  def stop(self) :
-    import pstats
-    self.pr.disable()
-    with open(self.output_file_path, "w") as output_file :
-      ps = pstats.Stats(self.pr, stream=output_file) #TODO add stdout option
-      ps.sort_stats('cumulative') #Sort the results by cumulative time taken
-      ps.print_stats()
-      print "\nProfiling results in '%s'" % self.output_file_path
-
-#
-
-
-
-from pulsetools import *
+#from pulsetools import 
 
 
 def FFT_that_shit(header,data):
@@ -76,10 +55,14 @@ def plot_that_shit(header,data,timestamp,option=0,n=100):
         print "ERROR: unrecognized option"
         
 
+@profile
+def flag_this_part():
+        print "Flagging this section of the code"
 
-if __name__=='__main__':
+        
+def mainprogram():
 
-        with Profiler("pulseana_profile.txt") as profiler :
+        if True:
                 parser = argparse.ArgumentParser(description="Analyze some pulses",formatter_class=RawTextHelpFormatter)
                 parser.add_argument('-i', '--input',dest='INFILE',nargs='*',\
                                     help="Input Data - can be any of the following:\n\t-Single string\n\t-list of strings\n\t-String pattern to search for\n",\
@@ -125,7 +108,7 @@ if __name__=='__main__':
                                 print "\nDetected a binary file."
                                 print "Importing relevant libraries..."
 
-                                from DPO3200bin_tools import *
+                                from DPO3200bin_tools import parse_header,load_data_bin
 
                                 print "Searching corresponding header file..."
                                 genericname=filetype[:-8]
@@ -163,11 +146,14 @@ if __name__=='__main__':
                         elif filetype.endswith(".trc"):
                                 print "\nDetected a LeCroy-formatted binary (.trc)"
                                 print "Importing relevant libraries..."
+
+                        
             
-                                from trc_tools import *
+                                from trc_tools import load_data_trc
                                 print "...done."
                                 nfiles = 0
-
+                               
+                                
                                 for element in filelist:
                                         if element.endswith(".trc"):
                                                 nfiles+=1
@@ -185,21 +171,25 @@ if __name__=='__main__':
 
                                         del header,newinfo
                     
-        
-                        elif filetype.endswith(".csv"):
+                                """
+                                elif filetype.endswith(".csv"):
                                 from otherfiles_tools import *
             
                                 for element in filelist:
                                         H,T,Y=load_data_csv(element)
                 
-                        elif filetype.endswith(".p"):
+                                elif filetype.endswith(".p"):
                                 from otherfiles_tools import *
                                 for element in filelist:
                                         H,T,Y=load_data_pickle(element)
-            
+                                """
                         else:
                                 print "******ERROR******\nI don't recognize your voodoo magic data type."
                                 sys.exit(-1)
 
                 else:
                         print "ERROR. no file entered."
+
+                        
+if __name__=='__main__':
+        mainprogram()

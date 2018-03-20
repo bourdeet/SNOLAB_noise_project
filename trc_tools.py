@@ -2,8 +2,11 @@
 # Library of .trc file analysis code
 #
 #########################################
+import numpy as np
 
-from pulsetools import *
+from pulsetools import find_pulses_in_that_shit,find_pulses_array,find_pulses_flasherrun
+from pulsetools import PMT_DAQ_sequence
+from pulsetools import header_data
 from readTrc_master import readTrc
 
 def parse_header_trc(trcformat):
@@ -54,21 +57,23 @@ def parse_header_trc(trcformat):
     
         return header_container
 
-
-
+@profile
 def load_data_trc(inputname,threshold,debug=False):
+
+        #********** Raw data show negative pulses ********
 
         seq_info=PMT_DAQ_sequence()
         X,Y,T,D=readTrc.readTrc(inputname)
 
         header=parse_header_trc(D)
 
+
         if header.mode=='normal':
 
-                pedestal=compute_pedestal(Y)
+                pedestal=np.median(Y)
 
     
-                Y=(Y-pedestal[0])
+                Y=(Y-pedestal)
                 charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=True,debug=debug)
                 #charge,times = find_pulses_array(X,Y,D,threshold=threshold,Nsample=3,debug=debug)
     
