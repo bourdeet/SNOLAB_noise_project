@@ -55,9 +55,6 @@ def plot_that_shit(header,data,timestamp,option=0,n=100):
         print "ERROR: unrecognized option"
         
 
-@profile
-def flag_this_part():
-        print "Flagging this section of the code"
 
         
 def mainprogram():
