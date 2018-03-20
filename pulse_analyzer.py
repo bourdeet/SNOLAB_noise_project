@@ -66,6 +66,10 @@ if __name__=='__main__':
 
     args = parser.parse_args()
 
+    print args.DEBUG
+    if args.DEBUG:
+            print 'there\'s gonna be some debugging happenin...'
+            
     #Welcome message
     print "**************************************\n\tWelcome to waveform analyzer\n"
     print "**************************************"

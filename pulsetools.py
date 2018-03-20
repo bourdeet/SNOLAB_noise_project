@@ -36,7 +36,7 @@ class header_data:
         
 class PMT_DAQ_sequence:
     def __init__(self):
-        self={'charge':[],'time':[],'livetime':0.0,'npulses':0,'pedestal':0.0}
+        self={'charge':[],'time':[],'livetime':0.0,'npulses':0,'pedestal':0.0,'mode':'unspecified'}
 
     def __setitem__(self, key, item):
         self.__dict__[key] = item
@@ -336,44 +336,77 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
 
 def find_pulses_flasherrun(X,Y,D,interval=[40,80],debug=False):
 
-    #***************  This code assumes a negative pulse convention  ***************
+        #***************  This code assumes a negative pulse convention  ***************
 
-    # In a flasher run, we don't care about the time, because the trigger is external
+        # In a flasher run, we don't care about the time, because the trigger is external
 
-    # Acquire information from the header:
-    sample_res_ns = D['HORIZ_INTERVAL']/1e-9
-    impedance = float(D['VERT_COUPLING'].split('_')[1])
+        # Acquire information from the header:
+        sample_res_ns = D['HORIZ_INTERVAL']/1e-9
+        impedance = float(D['VERT_COUPLING'].split('_')[1])
 
         
-    trace_length = D['WAVE_ARRAY_COUNT']/D['SUBARRAY_COUNT']
+        trace_length = D['WAVE_ARRAY_COUNT']/D['SUBARRAY_COUNT']
+        
+        mask = np.arange(1,D['WAVE_ARRAY_COUNT']+1)
 
-    mask = np.arange(1,D['WAVE_ARRAY_COUNT']+1)
-
-    mask = (mask%trace_length>=interval[0])&(mask%trace_length<=interval[1])
+        mask = (mask%trace_length>=interval[0])&(mask%trace_length<=interval[1])
 
 
-    signal = Y*mask
-    background = Y*~mask
-    pedestal = np.median(background)
+        signal = Y*mask
+        background = Y[~mask]
 
-    signal = signal-pedestal*mask
 
-    charge = []
+        if debug:
+                
+                plt.hist(background,bins=20)
+                plt.title('Pedestal distribution')
+                ax = plt.gca()
+                plt.text(0.3, 0.8,'median = %f'%np.median(background), horizontalalignment='center',
+                         verticalalignment='center', transform=ax.transAxes, fontsize=12)
+                plt.show()
+                
+                X2 = np.arange(0,len(X))%trace_length
+                
+                plt.plot(X2[0:500],signal[0:500],color='orange')
+                plt.plot([0,trace_length],[0,0],'k',linewidth=2.0)
+                plt.title('Raw signal (stacked)')
+                ax = plt.gca()
+                plt.text(0.7, 0.8,'median = %f'%np.median(signal), horizontalalignment='center',
+                         verticalalignment='center', transform=ax.transAxes, fontsize=12)
+                plt.show()
+                
+                
+        pedestal = np.median(background)
+        signal = (signal-pedestal)*mask
 
-    pulse_change = np.diff(mask)
-    start = np.where(pulse_change)[0]
+        if debug:
+                
+                plt.plot(X2[0:500],signal[0:500],color='red')
+                plt.plot([0,trace_length],[0,0],'k',linewidth=2.0)
+                plt.title('pedestal-subtracted signal (stacked)')
+                ax = plt.gca()
+                plt.text(0.7, 0.8,'median = %f'%np.median(signal), horizontalalignment='center',
+                         verticalalignment='center', transform=ax.transAxes, fontsize=12)
+                plt.show()
+        
+        charge = []
 
-    # pick only the even elements of the array
-    start = start[(np.arange(0,len(start))%2==0)]
+        pulse_change = np.diff(mask)
+        start = np.where(pulse_change)[0]
 
-    charge = []
-    dq = interval[1]-interval[0]
+        # pick only the even elements of the array
+        start = start[(np.arange(0,len(start))%2==0)]
 
-    for s in start:
-        charge.append(-sum(signal[s:s+dq])*dq*sample_res_ns/impedance*1000)
+        charge = []
+        dq = interval[1]-interval[0]
 
-    plt.hist(charge,bins=100)
-    plt.yscale('log')
-    plt.xlabel('charge (pC)')
-    plt.show()
-   
+        for s in start:
+                charge.append(-sum(signal[s:s+dq]*dq*sample_res_ns/impedance)*1000)
+
+
+        #plt.hist(charge,bins=100)
+        #plt.yscale('log')
+        #plt.xlabel('charge (pC)')
+        #plt.show()
+
+        return charge

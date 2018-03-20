@@ -76,6 +76,7 @@ def load_data_trc(inputname,threshold,debug=False):
                 seq_info['time']=times
                 seq_info['livetime']=float(len(Y))*header.windowscale['xincr']
                 seq_info['npulses']=len(charge)
+                seq_info['mode']='normal'
 
         
 
@@ -87,8 +88,14 @@ def load_data_trc(inputname,threshold,debug=False):
                 offset_mapping = np.repeat(T['offset'],trace_length)
 
                 adjusted_time = adjusted_time+trigtime_mapping+offset_mapping
-
-                charge,times = find_pulses_array(X,Y,D,sequence_time=adjusted_time,threshold=threshold,Nsample=3,debug=debug)
+                
+                if 'flasher' in inputname:
+                        seq_info['mode']='flasher'
+                        charge = find_pulses_flasherrun(X,Y,D,debug=debug)
+                        times = adjusted_time
+                else:
+                        seq_info['mode']='sequence'
+                        charge,times = find_pulses_array(X,Y,D,sequence_time=adjusted_time,threshold=threshold,Nsample=3,debug=debug)
 
                 seq_info['charge']=charge
                 seq_info['time']=times
