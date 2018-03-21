@@ -60,7 +60,7 @@ else:
                                 subfile.close()
                                 executive_order="chmod +x %s"%(submitfile)
                                 subprocess.Popen(executive_order.split())
-                                launch_command="sbatch -p icecube %s --mem-per-cpu=3G"%(submitfile)
+                                launch_command="sbatch -p icecube %s  --mem-per-cpu=5G"%(submitfile)
                                 print launch_command
                                 subprocess.Popen(launch_command.split())
         
