@@ -13,3 +13,6 @@ To analyze data from a `.trc` file:
 
 1. Use `pulse_analyzer.py` to extract pulse information into a pickle file. This code has been set up to recognize the standard `*` wildcard, so you can specify either a specific file name, or simply the generic name of the run, and the program will automatically find all subfiles for that run.
 
+* Note that you can easily delete/overwrite the pickle files produced, in case you are often modifying the `pulse_analyzer` code. DO NOT DELETE TRC FILES though!
+
+2. Use `pulse_II.py` To generate charge and delta-t distribution plots. A set of default plots has been defined for various modes of acquisition (sequence, normal and flasher).
