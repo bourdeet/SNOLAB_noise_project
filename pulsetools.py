@@ -256,29 +256,34 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         sample_res_ns = D['HORIZ_INTERVAL']/1e-9
         impedance = float(D['VERT_COUPLING'].split('_')[1])
 
-        
+        if debug:
+                plt.plot(time[0:10000],Y[0:10000],'r')
+                plt.title('data, adjusted timing')
+                plt.show()
 
-        # split into pedestal and non pedestal
+        # Select data below threshold (must be done BEFORE removing pedestal)
         #-------------------------------------------------------------------
 
-        
         signal_mask = Y<=threshold 
         signal   = Y*(signal_mask)
 
         
+        if debug:
+                plt.plot(time[0:10000],signal[0:10000],'r')
+                plt.title('data below threshold')
+                plt.show()
 
-        # Compute and subtract  pedestal
+                
+        # Compute and subtract pedestal
         #--------------------------------------------------------------------
         
         pedestal = Y[~signal_mask]
         pedestal = np.median(pedestal)
-        signal = signal-pedestal
+        signal = signal-pedestal*(signal_mask)
         
         if debug==True:
-                plt.plot(X[0:10000],Y[0:10000])
-                plt.show()
-
-                plt.plot(X[0:10000],signal[0:10000])
+                plt.plot(time[0:10000],signal[0:10000],'orange')
+                plt.title('data below threshold, minus pedestal')
                 plt.show()
 
         # Clean signal mask
