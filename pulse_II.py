@@ -34,6 +34,7 @@ parser.add_argument('-i', '--input',
                     required=True)
 
 parser.add_argument('--input2',
+                    default=None,
                     dest='INFILE2',
                     help="second set of data")
 
@@ -66,7 +67,7 @@ livetime=[]
 mode=[]
 times=[]
 
-# Load header information
+# Load Data from the main input
 #------------------------------------------------------------------
 
 for pickled_file in glob.glob(args.INFILE):
@@ -89,21 +90,67 @@ for pickled_file in glob.glob(args.INFILE):
                                 livetime.append(sequence['livetime'])
                                 
                                 if sequence['npulses']>1:
-                                        kept = sequence['charge']>args.THRES
-                                        kept_charge = sequence['charge'][kept]
-                                        kept_times  = sequence['time'][kept]
-                                
-                                
+                                        charge_array=np.array(sequence['charge'])
+                                        kept = charge_array>args.THRES
+                                        kept_charge = charge_array[kept]
+
+                                        if 'flasher' not in sequence['mode']:
+                                                time_array  =np.array(sequence['time']) 
+                                                kept_times  = time_array[kept]
+                                                times.append(kept_times)
+                                                deltatees.append(kept_times[1:]-kept_times[0:-1])
+                                                
                                         npulses.append(sum(kept))
                                         charge.append(kept_charge)
-                                        times.append(kept_times)
-                                        deltatees.append(kept_times[1:]-kept_times[0:-1])
 
                               
 
 charge = np.concatenate(charge)
-deltatees = np.concatenate(deltatees)
-times = np.concatenate(times)
+
+# check is there is a second input. If so, fetch the data for the container
+if args.INFILE2 is not None:
+        charge_II=[]
+        deltatees_II=[]
+        npulses_II=[]
+        livetime_II=[]
+        mode_II=[]
+        times_II=[]
+        
+        
+        for pickled_file in glob.glob(args.INFILE2):
+    
+                if 'header' not in pickled_file:
+
+                        data = pickle.load(open(pickled_file,"rb"))
+
+
+                        for sequence in data:
+                                mode_II.append(sequence['mode'])
+                                
+                                # Get rid of a nested list problem
+                                if isinstance(sequence,list):
+                                        sequence=sequence[0]
+
+                                if isinstance(sequence,PMT_DAQ_sequence):
+
+                                        livetime_II.append(sequence['livetime'])
+                                
+                                if sequence['npulses']>1:
+                                        charge_array=np.array(sequence['charge'])
+                                        kept = charge_array>args.THRES
+                                        kept_charge = charge_array[kept]
+
+                                        if 'flasher' not in sequence['mode']:
+                                                time_array  =np.array(sequence['time']) 
+                                                kept_times  = time_array[kept]
+                                                times_II.append(kept_times)
+                                                deltatees_II.append(kept_times[1:]-kept_times[0:-1])
+                                                
+                                        npulses_II.append(sum(kept))
+                                        charge_II.append(kept_charge)
+        
+        
+        charge_II = np.concatenate(charge_II)
 
 # Defining fitting functions
 def gaussian(x,A,mu,sigma):
@@ -144,8 +191,14 @@ if 'flasher' in mode:
         
         plt.ylabel("count")
         plt.xlabel("charge (pC)")
-        #plt.yscale('log')
-        y,x,_=plt.hist(charge,bins=binning_charge,color='g',alpha=0.5)
+        plt.yscale('log')
+        y,x,_=plt.hist(charge,bins=binning_charge,color='g',alpha=0.5,label='flasher ON')
+
+        if args.INFILE2 is not None:
+                y2,x2,_=plt.hist(charge_II,bins=binning_charge,color='r',alpha=0.5,label='flasher OFF')
+                plt.legend()
+                plt.show()
+                sys.exit()
 
         dx = (x[1:]-x[0:-1])[0]
         x = (x+dx/2)[:-1]
@@ -191,10 +244,12 @@ if 'flasher' in mode:
         
 
         plt.show()
-        sys.exit()
+
 
 else:
-
+        times = np.concatenate(times)
+        deltatees = np.concatenate(deltatees)
+        
         # Define the binning for delta-t histogram comparison
         binning = np.arange(-8.0,-1.0,0.1)
         binning_charge = np.arange(-5,50,1.)
