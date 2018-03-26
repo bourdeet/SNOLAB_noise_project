@@ -34,12 +34,28 @@ parser.add_argument('-i', '--input',
                     required=True)
 
 parser.add_argument('--input2',
+                    default=None,
                     dest='INFILE2',
                     help="second set of data")
 
+parser.add_argument('--run',
+                    dest='RUNID',
+                    type=int,
+                    help="number of the run")
+
+parser.add_argument('--threshold',dest='THRES',
+                    type=float,
+                    help="select only pulses above a certain threshold (in pC).",
+                    default=0.0
+                    )
+
+parser.add_argument('--debug',dest='DEBUG',
+                    action='store_true'
+                    )
 
 args = parser.parse_args()
 
+debug = args.DEBUG
 
 # Load data containers
 #------------------------------------------------------------------
@@ -49,8 +65,9 @@ deltatees=[]
 npulses=[]
 livetime=[]
 mode=[]
+times=[]
 
-# Load header information
+# Load Data from the main input
 #------------------------------------------------------------------
 
 for pickled_file in glob.glob(args.INFILE):
@@ -69,73 +86,71 @@ for pickled_file in glob.glob(args.INFILE):
                                 sequence=sequence[0]
 
                         if isinstance(sequence,PMT_DAQ_sequence):
-                
-                                npulses.append(float(sequence['npulses'])-1)
+
                                 livetime.append(sequence['livetime'])
-                
-                                for q in sequence['charge']:
-                                        charge.append(-q)
-
+                                
                                 if sequence['npulses']>1:
-                                        t = np.asarray(sequence['time'])
-                                        dT = np.log10(t[1:]-t[:-1])
-                                        for element in dT:
+                                        charge_array=np.array(sequence['charge'])
+                                        kept = charge_array>args.THRES
+                                        kept_charge = charge_array[kept]
 
-                                                deltatees.append(element)
+                                        if 'flasher' not in sequence['mode']:
+                                                time_array  =np.array(sequence['time']) 
+                                                kept_times  = time_array[kept]
+                                                times.append(kept_times)
+                                                deltatees.append(kept_times[1:]-kept_times[0:-1])
+                                                
+                                        npulses.append(sum(kept))
+                                        charge.append(kept_charge)
 
-                                       
+                              
 
-# Load second dataset if it exists
-#-----------------------------------------------------------------------
-charge_II=[]
-deltatees_II=[]
-npulses_II=[]
-livetime_II=[]
+charge = np.concatenate(charge)
 
-mode_II = []
-
+# check is there is a second input. If so, fetch the data for the container
 if args.INFILE2 is not None:
-
-
-
+        charge_II=[]
+        deltatees_II=[]
+        npulses_II=[]
+        livetime_II=[]
+        mode_II=[]
+        times_II=[]
+        
+        
         for pickled_file in glob.glob(args.INFILE2):
     
                 if 'header' not in pickled_file:
-        
 
                         data = pickle.load(open(pickled_file,"rb"))
 
 
-                for sequence in data:
+                        for sequence in data:
+                                mode_II.append(sequence['mode'])
+                                
+                                # Get rid of a nested list problem
+                                if isinstance(sequence,list):
+                                        sequence=sequence[0]
 
-                        mode=sequence['mode']
+                                if isinstance(sequence,PMT_DAQ_sequence):
 
-
-                        # Get rid of a nested list problem
-                        if isinstance(sequence,list):
-                    
-                                sequence=sequence[0]
-
-                        if isinstance(sequence,PMT_DAQ_sequence):
-                
-                                npulses_II.append(float(sequence['npulses'])-1)
-                                livetime_II.append(sequence['livetime'])
-                
-                                for q in sequence['charge']:
-                                        if q>2000:
-                                                print sequence
-                                        else:
-                                                charge_II.append(q)
-
+                                        livetime_II.append(sequence['livetime'])
+                                
                                 if sequence['npulses']>1:
-                                        t = np.asarray(sequence['time'])
-                                        dT = np.log10(t[1:]-t[:-1])
-                                        for element in dT:
-                                                deltatees_II.append(element)
+                                        charge_array=np.array(sequence['charge'])
+                                        kept = charge_array>args.THRES
+                                        kept_charge = charge_array[kept]
 
-
-charge = np.array(charge)
-deltatees = np.array(deltatees)
+                                        if 'flasher' not in sequence['mode']:
+                                                time_array  =np.array(sequence['time']) 
+                                                kept_times  = time_array[kept]
+                                                times_II.append(kept_times)
+                                                deltatees_II.append(kept_times[1:]-kept_times[0:-1])
+                                                
+                                        npulses_II.append(sum(kept))
+                                        charge_II.append(kept_charge)
+        
+        
+        charge_II = np.concatenate(charge_II)
 
 # Defining fitting functions
 def gaussian(x,A,mu,sigma):
@@ -170,14 +185,20 @@ def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
 if 'flasher' in mode:
 
         print "This is flasher data"
-        binning_charge = np.arange(-30,150,1.)
+        binning_charge = np.arange(-30,500,5.)
         
         # Charge distribution
         
         plt.ylabel("count")
         plt.xlabel("charge (pC)")
-        #plt.yscale('log')
-        y,x,_=plt.hist(-np.array(charge),bins=binning_charge,color='g',alpha=0.5)
+        plt.yscale('log')
+        y,x,_=plt.hist(charge,bins=binning_charge,color='g',alpha=0.5,label='flasher ON')
+
+        if args.INFILE2 is not None:
+                y2,x2,_=plt.hist(charge_II,bins=binning_charge,color='r',alpha=0.5,label='flasher OFF')
+                plt.legend()
+                plt.show()
+                sys.exit()
 
         dx = (x[1:]-x[0:-1])[0]
         x = (x+dx/2)[:-1]
@@ -223,58 +244,70 @@ if 'flasher' in mode:
         
 
         plt.show()
-        sys.exit()
-
-# Define the binning for delta-t histogram comparison
-binning = np.arange(-8.0,-1.0,0.1)
-
-binning_charge = np.arange(-30,150,1.)
 
 
-# Charge distribution
-plt.ylabel("count")
-plt.xlabel("charge (pC)")
-plt.yscale('log')
-y,x,_=plt.hist(-np.array(charge),bins=binning_charge,color='g',label='charge method 1',alpha=0.5)
-
-dx = (x[1:]-x[0:-1])[0]
-x = x+dx/2
-
+else:
+        times = np.concatenate(times)
+        deltatees = np.concatenate(deltatees)
+        
+        # Define the binning for delta-t histogram comparison
+        binning = np.arange(-8.0,-1.0,0.1)
+        binning_charge = np.arange(-5,50,1.)
 
 
-# Fitting spe peaks
-#-------------------------------------------------------------------------
+        # Remove sub-pe pulses from the array
+        if debug:
+                plt.plot(times)
+                plt.show()
+        
+        plt.ylabel("count")
+        plt.xlabel("delta-t (s)")
+        plt.yscale('log')
+        y,x,_=plt.hist(deltatees,bins=500,color='r',label='run %04i'%args.RUNID,alpha=0.5)
+        plt.legend()
+        plt.show()
 
+        
+        # Charge distribution
+        plt.ylabel("count")
+        plt.xlabel("charge (pC)")
+        plt.yscale('log')
+        y,x,_=plt.hist(charge,bins=binning_charge,color='g',label='run %04i'%args.RUNID,alpha=0.5)
+        plt.legend()
+        plt.show()
+        
+        dx = (x[1:]-x[0:-1])[0]
+        x = x+dx/2
 
-#plt.hist(charge_II,bins=100,color='r',label='charge method 2',alpha=0.5)
-plt.legend()
-plt.show()
+        
+        # Log10(delta-t)
+        Log10DT = np.log10(deltatees)
+        print len(Log10DT)
+        
+        with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
 
-plt.figure(2)
-plt.ylabel("count")
-plt.xlabel("log10(dT) (s)")
-
-
-with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
-
-    HS14,_=pickle.load(hitspool)
-
-    HS14=np.asarray(HS14)
-
-    W=np.array([1/float(len(HS14))]*len(HS14))
-
-    plt.hist(HS14,bins=binning,range=[-8,-1],alpha=0.5,label="Hitspool 2014",weights=W)
+                HS14,_=pickle.load(hitspool)
+                HS14=np.asarray(HS14)
+                W=np.array([1/float(len(HS14))]*len(HS14))
+                plt.hist(HS14,bins=binning,range=[-8,-1],alpha=0.5,label="Hitspool 2014",weights=W)
 
     
-deltatees=np.array(deltatees)
-#deltatees_II=np.array(deltatees_II)
+        V=np.array([1/float(len(deltatees))]*len(deltatees))
+        
+        plt.hist( Log10DT,bins=binning,alpha=0.5,label='run %04i'%args.RUNID,weights=V)
+        plt.xlabel('log10(delta-t)')
+        plt.ylabel('normalized count')
+        plt.legend(loc='upper left')
 
-V=np.array([1/float(len(deltatees))]*len(deltatees))
-#V2=np.array([1/float(len(deltatees_II))]*len(deltatees_II))
+        rate = sum(npulses)/sum(livetime)
+        
+        print "livetime: ",sum(livetime)," s"
+        print "npulses :", sum(npulses)
+        print "rate: ",rate," Hz"
+        
+        plt.text(-7,0.06,'Rate: %.3f Hz'%(rate))
+        plt.show()
 
-plt.hist(deltatees,bins=binning,alpha=0.5,label="charge method 1",weights=V)
-
-#plt.hist(deltatees_II,bins=binning,alpha=0.5,color='r',label="charge method 2",weights=V2)
-plt.legend()
-
-plt.show()
+        print "livetime: ",sum(livetime)," s"
+        print "npulses :", sum(npulses)
+        print "rate: ",sum(npulses)/sum(livetime)," Hz"

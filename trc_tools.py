@@ -8,6 +8,7 @@ from pulsetools import find_pulses_in_that_shit,find_pulses_array,find_pulses_fl
 from pulsetools import PMT_DAQ_sequence
 from pulsetools import header_data
 from readTrc_master import readTrc
+import matplotlib.pyplot as plt
 
 def parse_header_trc(trcformat):
 
@@ -69,11 +70,12 @@ def load_data_trc(inputname,threshold,debug=False):
 
 
         if header.mode=='normal':
-
-                pedestal=np.median(Y)
-
-    
-                Y=(Y-pedestal)
+        
+                if debug:
+                        plt.plot(X[0:10000],Y[0:10000])
+                        plt.title('raw data')
+                        plt.show()
+                        
                 #charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=True,debug=debug)
                 charge,times = find_pulses_array(X,Y,D,threshold=threshold,Nsample=3,debug=debug)
     
@@ -97,7 +99,7 @@ def load_data_trc(inputname,threshold,debug=False):
                 if 'flasher' in inputname:
                         seq_info['mode']='flasher'
                         charge = find_pulses_flasherrun(X,Y,D,debug=debug)
-                        times = adjusted_time
+                        times = None
                 else:
                         seq_info['mode']='sequence'
                         charge,times = find_pulses_array(X,Y,D,sequence_time=adjusted_time,threshold=threshold,Nsample=3,debug=debug)
