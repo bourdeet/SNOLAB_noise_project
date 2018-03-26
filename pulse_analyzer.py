@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse analyzer
-# last update: September 6th 2017
+# last update: March 26th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -64,13 +64,15 @@ def mainprogram():
                 parser.add_argument('-i', '--input',dest='INFILE',nargs='*',\
                                     help="Input Data - can be any of the following:\n\t-Single string\n\t-list of strings\n\t-String pattern to search for\n",\
                                     required=True)
-                # parser.add_argument('-t','--type',dest="TYPE",\
-                        #                     help='Type of raw data:\n\t-csv\n\t-pickle (.p)\n\t-Custom Binary (.bin)\n\t-LeCroy-formatted binary (.trc)\n',\
-                        #                     default = "bin")
 
                 parser.add_argument('-o', '--output',dest='OUTFILE',\
                                     help="Generic name for an output file\n where the data is saved  (.p file)",\
                                     default="summary.p")
+                
+                parser.add_argument('-t','--threshold',dest='THRESH',
+                                    help="Exclude pulses below a user-defined threshold (in V)",
+                                    type=float,
+                                    default=-0.0025)
     
                 parser.add_argument('--debug',dest='DEBUG',help='Enter debug mode: plots subsets of traces',action='store_true')
 
@@ -161,7 +163,7 @@ def mainprogram():
                                                 filennum = int(X)
 
                                                 # Save one pickle file per input trc file
-                                                newinfo,header=load_data_trc(element,threshold=-0.0025,debug=args.DEBUG)
+                                                newinfo,header=load_data_trc(element,threshold=args.THRESH,debug=args.DEBUG)
                                                 pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data
                                                 pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
