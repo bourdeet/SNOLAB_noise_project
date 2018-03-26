@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse II
-# last update: March 13th 2018
+# last update: March 26th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -185,7 +185,7 @@ def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
 if 'flasher' in mode:
 
         print "This is flasher data"
-        binning_charge = np.arange(-30,500,5.)
+        binning_charge = np.arange(-0.2,15,0.1)
         
         # Charge distribution
         
@@ -252,7 +252,7 @@ else:
         
         # Define the binning for delta-t histogram comparison
         binning = np.arange(-8.0,-1.0,0.1)
-        binning_charge = np.arange(-5,50,1.)
+        binning_charge = np.arange(-5,30,0.1)
 
 
         # Remove sub-pe pulses from the array
@@ -283,7 +283,7 @@ else:
         # Log10(delta-t)
         Log10DT = np.log10(deltatees)
         print len(Log10DT)
-        
+        """
         with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
 
                 HS14,_=pickle.load(hitspool)
@@ -291,10 +291,10 @@ else:
                 W=np.array([1/float(len(HS14))]*len(HS14))
                 plt.hist(HS14,bins=binning,range=[-8,-1],alpha=0.5,label="Hitspool 2014",weights=W)
 
-    
+        """
         V=np.array([1/float(len(deltatees))]*len(deltatees))
         
-        plt.hist( Log10DT,bins=binning,alpha=0.5,label='run %04i'%args.RUNID,weights=V)
+        plt.hist( Log10DT[Log10DT>-6.5],bins=binning,alpha=0.5,label='run %04i'%args.RUNID)#,normed=True)#weights=V[Log10DT>-6.5])
         plt.xlabel('log10(delta-t)')
         plt.ylabel('normalized count')
         plt.legend(loc='upper left')
