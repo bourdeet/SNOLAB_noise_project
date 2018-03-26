@@ -185,7 +185,7 @@ def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
 if 'flasher' in mode:
 
         print "This is flasher data"
-        binning_charge = np.arange(-30,150,1.)
+        binning_charge = np.arange(-30,500,5.)
         
         # Charge distribution
         
