@@ -361,7 +361,6 @@ def find_pulses_flasherrun(X,Y,D,interval=[40,80],debug=False):
         signal = Y*mask
         background = Y[~mask]
 
-
         if debug:
                 
                 plt.hist(background,bins=20)
@@ -373,7 +372,7 @@ def find_pulses_flasherrun(X,Y,D,interval=[40,80],debug=False):
                 
                 X2 = np.arange(0,len(X))%trace_length
                 
-                plt.plot(X2[0:500],signal[0:500],color='orange')
+                plt.plot(X2[0:5000],signal[0:5000],color='orange')
                 plt.plot([0,trace_length],[0,0],'k',linewidth=2.0)
                 plt.title('Raw signal (stacked)')
                 ax = plt.gca()
@@ -387,7 +386,7 @@ def find_pulses_flasherrun(X,Y,D,interval=[40,80],debug=False):
 
         if debug:
                 
-                plt.plot(X2[0:500],signal[0:500],color='red')
+                plt.plot(X2[0:5000],signal[0:5000],color='red')
                 plt.plot([0,trace_length],[0,0],'k',linewidth=2.0)
                 plt.title('pedestal-subtracted signal (stacked)')
                 ax = plt.gca()

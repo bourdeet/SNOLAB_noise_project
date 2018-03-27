@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse analyzer
-# last update: March 26th 2018
+# last update: March 27th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -76,6 +76,10 @@ def mainprogram():
     
                 parser.add_argument('--debug',dest='DEBUG',help='Enter debug mode: plots subsets of traces',action='store_true')
 
+
+                parser.add_argument('--flash-as-seq',dest='FasS',help='Process flasher runs as sequence runs',action='store_true')
+
+                
                 args = parser.parse_args()
 
                 print args.DEBUG
@@ -163,8 +167,10 @@ def mainprogram():
                                                 filennum = int(X)
 
                                                 # Save one pickle file per input trc file
-                                                newinfo,header=load_data_trc(element,threshold=args.THRESH,debug=args.DEBUG)
-                                                pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
+                                                newinfo,header=load_data_trc(element,threshold=args.THRESH,
+                                                                             asSeq = args.FasS,
+                                                                             debug=args.DEBUG)
+                                                # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data
                                                 pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
 

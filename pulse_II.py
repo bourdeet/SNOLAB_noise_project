@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse II
-# last update: March 26th 2018
+# last update: March 27th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -46,7 +46,7 @@ parser.add_argument('--run',
 parser.add_argument('--threshold',dest='THRES',
                     type=float,
                     help="select only pulses above a certain threshold (in pC).",
-                    default=0.0
+                    default=-1000
                     )
 
 parser.add_argument('--debug',dest='DEBUG',
@@ -185,14 +185,14 @@ def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
 if 'flasher' in mode:
 
         print "This is flasher data"
-        binning_charge = np.arange(-0.2,15,0.1)
+        binning_charge = np.arange(-1,300,5)
         
         # Charge distribution
         
         plt.ylabel("count")
         plt.xlabel("charge (pC)")
-        plt.yscale('log')
-        y,x,_=plt.hist(charge,bins=binning_charge,color='g',alpha=0.5,label='flasher ON')
+        #plt.yscale('log')
+        y,x,_=plt.hist(charge,bins=100,color='g',alpha=0.5,label='flasher ON')
 
         if args.INFILE2 is not None:
                 y2,x2,_=plt.hist(charge_II,bins=binning_charge,color='r',alpha=0.5,label='flasher OFF')
@@ -216,7 +216,7 @@ if 'flasher' in mode:
 
         #Peak fitting
         print "Fitting the pedestal..."
-        popt,pcov = curve_fit(gaussian,x,y,p0=[40000,-20,5])
+        popt,pcov = curve_fit(gaussian,x,y,p0=[0000,-20,5])
 
         y2 = y-gaussian(x,*popt)
         plt.show()

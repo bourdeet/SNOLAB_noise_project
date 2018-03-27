@@ -59,7 +59,7 @@ def parse_header_trc(trcformat):
         return header_container
 
 
-def load_data_trc(inputname,threshold,debug=False):
+def load_data_trc(inputname,threshold,asSeq=False,debug=False):
 
         #********** Raw data show negative pulses ********
 
@@ -98,8 +98,13 @@ def load_data_trc(inputname,threshold,debug=False):
                 
                 if 'flasher' in inputname:
                         seq_info['mode']='flasher'
-                        charge = find_pulses_array(X,Y,D,sequence_time=adjusted_time,threshold=threshold,Nsample=3,debug=debug)
-                        #charge = find_pulses_flasherrun(X,Y,D,debug=debug)
+                        if asSeq:
+                                charge = find_pulses_array(X,Y,D,
+                                                           sequence_time=adjusted_time,
+                                                           threshold=threshold,Nsample=3,debug=debug)
+                        else:
+                                charge = find_pulses_flasherrun(X,Y,D,debug=debug)
+                                
                         times = None
                 else:
                         seq_info['mode']='sequence'
