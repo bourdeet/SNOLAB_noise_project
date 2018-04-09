@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse analyzer
-# last update: March 27th 2018
+# last update: April 4th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -168,7 +168,7 @@ def mainprogram():
 
                                                 # Save one pickle file per input trc file
                                                 newinfo,header=load_data_trc(element,threshold=args.THRESH,
-                                                                             asSeq = args.FasS,
+                                                                             asSeq = args.FasS, #treat flasher runs as sequence runs
                                                                              debug=args.DEBUG)
                                                 # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data

@@ -252,7 +252,7 @@ else:
         
         # Define the binning for delta-t histogram comparison
         binning = np.arange(-8.0,-1.0,0.1)
-        binning_charge = np.arange(-5,30,0.1)
+        binning_charge = np.arange(-5,20,0.2)
 
 
         # Remove sub-pe pulses from the array
@@ -271,7 +271,7 @@ else:
         # Charge distribution
         plt.ylabel("count")
         plt.xlabel("charge (pC)")
-        plt.yscale('log')
+        #plt.yscale('log')
         y,x,_=plt.hist(charge,bins=binning_charge,color='g',label='run %04i'%args.RUNID,alpha=0.5)
         plt.legend()
         plt.show()

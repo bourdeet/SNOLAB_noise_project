@@ -257,7 +257,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         impedance = float(D['VERT_COUPLING'].split('_')[1])
 
         if debug:
-                plt.plot(time[0:10000],Y[0:10000],'r')
+                plt.plot(time,Y,'r')#[0:10000],Y[0:10000],'r')
                 plt.title('data, adjusted timing')
                 plt.show()
 
@@ -269,7 +269,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
 
         
         if debug:
-                plt.plot(time[0:10000],signal[0:10000],'r')
+                plt.plot(time,signal,'r')#[0:10000],signal[0:10000],'r')
                 plt.title('data below threshold')
                 plt.show()
 
@@ -282,7 +282,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         signal = signal-pedestal*(signal_mask)
         
         if debug==True:
-                plt.plot(time[0:10000],signal[0:10000],'orange')
+                plt.plot(time,signal,'orange')#[0:10000],signal[0:10000],'orange')
                 plt.title('data below threshold, minus pedestal')
                 plt.show()
 
@@ -340,7 +340,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         return -charge,times
 
 
-def find_pulses_flasherrun(X,Y,D,interval=[40,80],debug=False):
+def find_pulses_flasherrun(X,Y,D,interval=[40,80],threshold=50.0,debug=False):
 
         #***************  This code assumes a negative pulse convention  ***************
 

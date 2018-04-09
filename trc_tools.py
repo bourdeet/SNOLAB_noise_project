@@ -70,9 +70,10 @@ def load_data_trc(inputname,threshold,asSeq=False,debug=False):
 
 
         if header.mode=='normal':
+               
         
                 if debug:
-                        plt.plot(X[0:10000],Y[0:10000])
+                        plt.plot(X,Y)
                         plt.title('raw data')
                         plt.show()
                         
@@ -103,7 +104,7 @@ def load_data_trc(inputname,threshold,asSeq=False,debug=False):
                                                            sequence_time=adjusted_time,
                                                            threshold=threshold,Nsample=3,debug=debug)
                         else:
-                                charge = find_pulses_flasherrun(X,Y,D,debug=debug)
+                                charge = find_pulses_flasherrun(X,Y,D,threshold=threshold,debug=debug)
                                 
                         times = None
                 else:
