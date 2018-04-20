@@ -340,7 +340,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         return -charge,times
 
 
-def find_pulses_flasherrun(X,Y,D,interval=[40,80],threshold=50.0,debug=False):
+def find_pulses_flasherrun(X,Y,D,interval=[20,40],threshold=50.0,debug=False):
 
         #***************  This code assumes a negative pulse convention  ***************
 

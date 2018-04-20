@@ -78,6 +78,7 @@ def mainprogram():
 
 
                 parser.add_argument('--flash-as-seq',dest='FasS',help='Process flasher runs as sequence runs',action='store_true')
+                parser.add_argument('--asFlash',dest='SasF',help='Process sequence runs as flasher runs',action='store_true')
 
                 
                 args = parser.parse_args()
@@ -163,12 +164,13 @@ def mainprogram():
                                                 if nfiles%10==0:
                                                         print "processed %i files..."%(nfiles)
 
-                                                X = element.split('_')[-1][0:5]
+                                                X = element.split('_')[-1][0:5]#[3:8]
                                                 filennum = int(X)
 
                                                 # Save one pickle file per input trc file
                                                 newinfo,header=load_data_trc(element,threshold=args.THRESH,
                                                                              asSeq = args.FasS, #treat flasher runs as sequence runs
+                                                                             asFlash=args.SasF,
                                                                              debug=args.DEBUG)
                                                 # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data
