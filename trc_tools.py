@@ -60,7 +60,7 @@ def parse_header_trc(trcformat):
 
 
 def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False,debug=False):
-        print type(interval)
+        
         #********** Raw data show negative pulses ********
 
         seq_info=PMT_DAQ_sequence()
