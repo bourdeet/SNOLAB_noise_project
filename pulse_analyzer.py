@@ -74,16 +74,28 @@ def mainprogram():
                                     type=float,
                                     default=-0.0025)
     
-                parser.add_argument('--debug',dest='DEBUG',help='Enter debug mode: plots subsets of traces',action='store_true')
+                parser.add_argument('--debug',dest='DEBUG',
+                                    help='Enter debug mode: plots subsets of traces',
+                                    action='store_true')
 
 
-                parser.add_argument('--flash-as-seq',dest='FasS',help='Process flasher runs as sequence runs',action='store_true')
-                parser.add_argument('--asFlash',dest='SasF',help='Process sequence runs as flasher runs',action='store_true')
-
+                parser.add_argument('--flash-as-seq',dest='FasS',
+                                    help='Process flasher runs as sequence runs',
+                                    action='store_true')
+                
+                parser.add_argument('--asFlash',dest='SasF',
+                                    help='Process sequence runs as flasher runs',
+                                    action='store_true')
+                
+                parser.add_argument('--interval',dest='INTERVAL',
+                                    help='time window interval for flasher run',
+                                    default = [20,40]
+                )
                 
                 args = parser.parse_args()
 
-                print args.DEBUG
+                interval = [int(args.INTERVAL.split(',')[0]),int(args.INTERVAL.split(',')[1])]
+                
                 if args.DEBUG:
                         print 'there\'s gonna be some debugging happenin...'
             
@@ -169,6 +181,7 @@ def mainprogram():
 
                                                 # Save one pickle file per input trc file
                                                 newinfo,header=load_data_trc(element,threshold=args.THRESH,
+                                                                             interval=interval,
                                                                              asSeq = args.FasS, #treat flasher runs as sequence runs
                                                                              asFlash=args.SasF,
                                                                              debug=args.DEBUG)
