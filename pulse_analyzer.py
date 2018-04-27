@@ -89,7 +89,7 @@ def mainprogram():
                 
                 parser.add_argument('--interval',dest='INTERVAL',
                                     help='time window interval for flasher run',
-                                    default = 20,40
+                                    default ="20,40"
                 )
                 
                 args = parser.parse_args()
