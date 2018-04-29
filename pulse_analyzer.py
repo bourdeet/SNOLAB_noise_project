@@ -91,6 +91,12 @@ def mainprogram():
                                     help='time window interval for flasher run',
                                     default ="20,40"
                 )
+
+                parser.add_argument('--pulse_width',dest='WIDTH',
+                                    help='number of samples to integrate charge over',
+                                    type=int,
+                                    default =3
+                )
                 
                 args = parser.parse_args()
 
@@ -184,7 +190,9 @@ def mainprogram():
                                                                              interval=interval,
                                                                              asSeq = args.FasS, #treat flasher runs as sequence runs
                                                                              asFlash=args.SasF,
-                                                                             debug=args.DEBUG)
+                                                                             debug=args.DEBUG,
+                                                                             Nsample = args.WIDTH
+                                                )
                                                 # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data
                                                 pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))

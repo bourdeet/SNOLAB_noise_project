@@ -49,6 +49,11 @@ parser.add_argument('--threshold',dest='THRES',
                     default=-1000
                     )
 
+parser.add_argument('--deadcut',dest='DCUT',
+                    help="Apply the 6 us cut to compute the rate",
+                    action='store_true'
+                    ) 
+
 parser.add_argument('--debug',dest='DEBUG',
                     action='store_true'
                     )
@@ -78,8 +83,9 @@ for pickled_file in glob.glob(args.INFILE):
 
 
                 for sequence in data:
-                        
+                        livetime.append(sequence['livetime'])
                         mode.append(sequence['mode'])
+                        
                         # Get rid of a nested list problem
                         if isinstance(sequence,list):
                     
@@ -87,7 +93,7 @@ for pickled_file in glob.glob(args.INFILE):
 
                         if isinstance(sequence,PMT_DAQ_sequence):
 
-                                livetime.append(sequence['livetime'])
+                                #livetime.append(sequence['livetime'])
                                 
                                 if sequence['npulses']>1:
                                         charge_array=np.array(sequence['charge'])
@@ -105,8 +111,10 @@ for pickled_file in glob.glob(args.INFILE):
 
                               
 
+print sum(livetime)
 charge = np.concatenate(charge)
 
+"""
 # check is there is a second input. If so, fetch the data for the container
 if args.INFILE2 is not None:
         charge_II=[]
@@ -151,6 +159,7 @@ if args.INFILE2 is not None:
         
         
         charge_II = np.concatenate(charge_II)
+"""
 
 # Defining fitting functions
 def gaussian(x,A,mu,sigma):
@@ -249,6 +258,7 @@ if 'flasher' in mode:
 else:
         times = np.concatenate(times)
         deltatees = np.concatenate(deltatees)
+        V=np.array([1/float(len(deltatees))]*len(deltatees))
         
         # Define the binning for delta-t histogram comparison
         binning = np.arange(-8.0,-1.0,0.1)
@@ -283,7 +293,16 @@ else:
         # Log10(delta-t)
         Log10DT = np.log10(deltatees)
         print len(Log10DT)
-        """
+
+        if args.DCUT:
+                Log10DT = Log10DT[Log10DT>-5.221848]
+                V=np.array([1/float(len(Log10DT))]*len(Log10DT))
+                rate = len(Log10DT+1)/float(sum(livetime))
+                print "rate: %f Hz"%rate
+        else:
+                rate = sum(npulses)/sum(livetime)
+
+                
         with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
 
                 HS14,_=pickle.load(hitspool)
@@ -291,15 +310,15 @@ else:
                 W=np.array([1/float(len(HS14))]*len(HS14))
                 plt.hist(HS14,bins=binning,range=[-8,-1],alpha=0.5,label="Hitspool 2014",weights=W)
 
-        """
-        V=np.array([1/float(len(deltatees))]*len(deltatees))
         
-        plt.hist( Log10DT[Log10DT>-6.5],bins=binning,alpha=0.5,label='run %04i'%args.RUNID)#,normed=True)#weights=V[Log10DT>-6.5])
+
+        
+        plt.hist( Log10DT,bins=binning,alpha=0.5,label='run %04i'%args.RUNID,weights=V)#[Log10DT>-6.5])
         plt.xlabel('log10(delta-t)')
         plt.ylabel('normalized count')
         plt.legend(loc='upper left')
 
-        rate = sum(npulses)/sum(livetime)
+
         
         print "livetime: ",sum(livetime)," s"
         print "npulses :", sum(npulses)
@@ -308,6 +327,3 @@ else:
         plt.text(-7,0.06,'Rate: %.3f Hz'%(rate))
         plt.show()
 
-        print "livetime: ",sum(livetime)," s"
-        print "npulses :", sum(npulses)
-        print "rate: ",sum(npulses)/sum(livetime)," Hz"
