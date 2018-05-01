@@ -26,7 +26,7 @@ parser.add_argument('--width',
                     dest="PWIDTH",
                     help="pulse integration width",
                     type=int,
-                    default = 10).
+                    default = 10)
 
 
 parser.add_argument('--thresh',
