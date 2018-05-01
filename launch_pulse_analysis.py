@@ -26,7 +26,14 @@ parser.add_argument('--width',
                     dest="PWIDTH",
                     help="pulse integration width",
                     type=int,
-                    default = 10)
+                    default = 10).
+
+
+parser.add_argument('--thresh',
+                    dest="THRESH",
+                    help="threshold (default -500 microVolt",
+                    type=float,
+                    default = -0.0005)
 
 args = parser.parse_args()
 
@@ -64,7 +71,7 @@ else:
                                 subfile= open(submitfile,"w")
                                 subfile.write("#!/bin/bash\n")
 
-                        Launch_code=execution_directory+"pulse_analyzer.py -i %s -o %s/%srun%04i.p --pulse_width %i \n "%(input_directory+trcfile,output_directory,args.OUTNAME,args.RUNID,args.PWIDTH)
+                        Launch_code=execution_directory+"pulse_analyzer.py -i %s -o %s/%srun%04i.p --pulse_width %i -t %f \n "%(input_directory+trcfile,output_directory,args.OUTNAME,args.RUNID,args.PWIDTH,args.THRESH)
 
                         subfile.write(Launch_code)
                         ntotal+=1
