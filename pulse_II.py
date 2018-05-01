@@ -307,13 +307,16 @@ else:
 
                 HS14,_=pickle.load(hitspool)
                 HS14=np.asarray(HS14)
-                W=np.array([1/float(len(HS14))]*len(HS14))
-                plt.hist(HS14,bins=binning,range=[-8,-1],alpha=0.5,label="Hitspool 2014",weights=W)
+                #W=np.array([1/float(len(HS14))]*len(HS14))
+
+                W = np.array([sum(Log10DT[Log10DT>-6])/sum(HS14)]*len(HS14))
+                
+                plt.hist(HS14,bins=binning,range=[-8,-1],histtype='step',linewidth=2.0,color='k',label="Hitspool 2014",weights=W)
 
         
 
         
-        plt.hist( Log10DT,bins=binning,alpha=0.5,label='run %04i'%args.RUNID,weights=V)#[Log10DT>-6.5])
+        plt.hist( Log10DT,bins=binning,alpha=0.5,label='run %04i'%args.RUNID,color='g')#,weights=V)#[Log10DT>-6.5])
         plt.xlabel('log10(delta-t)')
         plt.ylabel('normalized count')
         plt.legend(loc='upper left')

@@ -72,7 +72,7 @@ def mainprogram():
                 parser.add_argument('-t','--threshold',dest='THRESH',
                                     help="Exclude pulses below a user-defined threshold (in V)",
                                     type=float,
-                                    default=-0.0025)
+                                    default=-0.001)
     
                 parser.add_argument('--debug',dest='DEBUG',
                                     help='Enter debug mode: plots subsets of traces',
@@ -95,7 +95,7 @@ def mainprogram():
                 parser.add_argument('--pulse_width',dest='WIDTH',
                                     help='number of samples to integrate charge over',
                                     type=int,
-                                    default =3
+                                    default =10
                 )
                 
                 args = parser.parse_args()

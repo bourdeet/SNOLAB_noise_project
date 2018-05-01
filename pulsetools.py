@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse analyzer
-# last update: March 16th 2018
+# last update: May 1st 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -239,7 +239,9 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
     return -np.array(Q),np.array(t)*timeint
 
 
-def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=False):
+def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=False):
+
+        print Nsample
 
         #***************  This code assumes a negative pulse convention  ***************
 
@@ -278,6 +280,11 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         #--------------------------------------------------------------------
         
         pedestal = Y[~signal_mask]
+        if debug==True:
+                plt.hist(pedestal,bins=30)
+                plt.title("value of the non-signal")
+                plt.show()
+                
         pedestal = np.median(pedestal)
         signal = signal-pedestal*(signal_mask)
         
@@ -321,12 +328,32 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
 
         selected_pulse[pt]=True
 
+        if debug==True:
+                plt.plot(time,Y,'r')
+                plt.plot(time,-0.005*selected_pulse[1:-1])
+                plt.plot(time,Y*selected_pulse[1:-1],'go')
+                plt.title("Pulses selected")
+                plt.show()
+
         # Now, selected_pulse is the cleaned signal mask that only
         # keeps pulses that pass the threshold, and have a minimal width
         # of N samples
 
 
         pulses = np.split(signal*selected_pulse*sample_res_ns/impedance*1000,start+1)
+
+        print start+1
+
+        if debug==True:
+                for element in pulses:
+                        if sum(element)!=0:
+                                print "charge of this pulse:",sum(element)
+                                print "length of this pulse: ",len(element)
+                                plt.plot(element)
+                                plt.show()
+                        
+                        
+
 
         charge = np.array([sum(x) for x in pulses])
         charge = charge[charge!=0]
@@ -337,6 +364,11 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=3,debug=Fa
         time_indices  = start[np.in1d(start+1,selected_pulse.nonzero())]+1
         times = time[time_indices]
 
+
+        # Remove the last item which is probably bad
+        charge = charge[:-1]
+        times = times[:-1]
+        
         return -charge,times
 
 
