@@ -438,7 +438,7 @@ def find_pulses_flasherrun(X,Y,D,interval=[20,40],threshold=50.0,debug=False):
         dq = interval[1]-interval[0]
 
         for s in start:
-                charge.append(-sum(signal[s:s+dq]*dq*sample_res_ns/impedance)*1000)
+                charge.append(-sum(signal[s:s+dq]*sample_res_ns/impedance)*1000)
 
 
         #plt.hist(charge,bins=100)

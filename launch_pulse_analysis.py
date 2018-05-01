@@ -16,6 +16,18 @@ parser.add_argument('--run',
                     help="run number",
                     required=True)
 
+
+parser.add_argument('-o','--outname',
+                    dest="OUTNAME",
+                    help="prefix to the output file name",
+                    default = "")
+
+parser.add_argument('--width',
+                    dest="PWIDTH",
+                    help="pulse integration width",
+                    type=int,
+                    default = 10)
+
 args = parser.parse_args()
 
 
@@ -52,7 +64,7 @@ else:
                                 subfile= open(submitfile,"w")
                                 subfile.write("#!/bin/bash\n")
 
-                        Launch_code=execution_directory+"pulse_analyzer.py -i %s -o %s/run%04i.p\n "%(input_directory+trcfile,output_directory,args.RUNID)
+                        Launch_code=execution_directory+"pulse_analyzer.py -i %s -o %s/%srun%04i.p --pulse_width %i \n "%(input_directory+trcfile,output_directory,args.OUTNAME,args.RUNID,args.PWIDTH)
 
                         subfile.write(Launch_code)
                         ntotal+=1

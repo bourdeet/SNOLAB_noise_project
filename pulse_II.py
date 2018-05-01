@@ -18,11 +18,10 @@ import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 import pylab as plb
 from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
-
+from scipy.misc import factorial
 
 
 parser = argparse.ArgumentParser(description="pulse II",
@@ -273,7 +272,25 @@ else:
         plt.ylabel("count")
         plt.xlabel("delta-t (s)")
         plt.yscale('log')
-        y,x,_=plt.hist(deltatees,bins=500,color='r',label='run %04i'%args.RUNID,alpha=0.5)
+        y,X,_=plt.hist(deltatees,bins=200,color='r',label='run %04i'%args.RUNID,alpha=0.5)
+
+        x = X[0:-1]+(X[2]-X[1])/2.0
+
+        poi_x= x[(x>0.004)]
+        poi_y= y[(x>0.004)]
+        
+
+        def poisson(k, lamb,Ao):
+                """poisson pdf, parameter lamb is the fit parameter"""
+                return Ao*((lamb**k/factorial(k)) * np.exp(-lamb))
+
+        
+        import scipy.optimize as optimization
+        bestfitparam,cov= optimization.curve_fit(poisson, poi_x, poi_y,[0.0,1000.0])
+        Xfit = X[0:-1]+(X[2]-X[1])/2.0
+        Yfit = poisson(Xfit,bestfitparam[0],bestfitparam[1])
+        
+        plt.plot(Xfit, Yfit,'g',linewidth=2.0,label='Poisson Fit')
         plt.legend()
         plt.show()
 
