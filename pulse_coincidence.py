@@ -78,13 +78,14 @@ def mainprogram():
 
                 # save the time of these pulses
 
-                for readout in 
+                #for readout in 
 
                 #check if there's something in the readout
 
                 if something:
                         coincidence+=1
                 else:
+                        coincidence=0
                         #nothing
         
                 p=0
