@@ -22,7 +22,7 @@ import pylab as plb
 from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 from scipy.misc import factorial
-
+import scipy
 
 parser = argparse.ArgumentParser(description="pulse II",
                                  formatter_class=RawTextHelpFormatter)
@@ -53,6 +53,10 @@ parser.add_argument('--deadcut',dest='DCUT',
                     action='store_true'
                     ) 
 
+parser.add_argument('--deadcutII',dest='DCUT2',
+                    help="Apply the 2.45 us cut to compute the rate",
+                    action='store_true'
+                    ) 
 parser.add_argument('--debug',dest='DEBUG',
                     action='store_true'
                     )
@@ -92,7 +96,6 @@ for pickled_file in glob.glob(args.INFILE):
 
                         if isinstance(sequence,PMT_DAQ_sequence):
 
-                                #livetime.append(sequence['livetime'])
                                 
                                 if sequence['npulses']>1:
                                         charge_array=np.array(sequence['charge'])
@@ -110,7 +113,7 @@ for pickled_file in glob.glob(args.INFILE):
 
                               
 
-print sum(livetime)
+
 charge = np.concatenate(charge)
 
 """
@@ -269,31 +272,59 @@ else:
                 plt.plot(times)
                 plt.show()
         
-        plt.ylabel("count")
-        plt.xlabel("delta-t (s)")
-        plt.yscale('log')
-        y,X,_=plt.hist(deltatees,bins=200,color='r',label='run %04i'%args.RUNID,alpha=0.5)
+       
+        y,X=np.histogram(deltatees,bins=200)
 
-        x = X[0:-1]+(X[2]-X[1])/2.0
-
-        poi_x= x[(x>0.004)]
-        poi_y= y[(x>0.004)]
+        y =  np.concatenate([y,np.array([0.0])])
         
+        poi_x= X[(X>0.004)]
+        poi_y= y[(X>0.004)]
+        livetime=sum(livetime)
 
-        def poisson(k, lamb,Ao):
-                """poisson pdf, parameter lamb is the fit parameter"""
-                return Ao*((lamb**k/factorial(k)) * np.exp(-lamb))
+        def fit_uncorrelated_rate(poi_x,poi_y,livetime):
+
+                
+                
+                def poisson(X,expected_rate):
+
+                        dt=[]
+                        
+                        for i in range(0,int(livetime/0.05)):
+                                n = scipy.random.poisson(expected_rate*0.05)
+                                times = scipy.random.uniform(0.,0.05,size=n)
+                                x = np.sort(times)
+                                dt.append(x[1:]-x[0:-1])
+                        
+                        dt = np.hstack(dt)
+
+                        y,_=np.histogram(dt,bins=X)
+                        
+                        y =np.concatenate([y,np.array([0.0])])
+                
+                        return y
+
+                
 
         
-        import scipy.optimize as optimization
-        bestfitparam,cov= optimization.curve_fit(poisson, poi_x, poi_y,[0.0,1000.0])
-        Xfit = X[0:-1]+(X[2]-X[1])/2.0
-        Yfit = poisson(Xfit,bestfitparam[0],bestfitparam[1])
+                import scipy.optimize as optimization
+                bestfitparam,cov= optimization.curve_fit(poisson, poi_x,poi_y,500,max_nfev=1000,method='trf',bounds=[100,6000],diff_step=1,verbose=2,xtol=1e-40)
         
-        plt.plot(Xfit, Yfit,'g',linewidth=2.0,label='Poisson Fit')
-        plt.legend()
-        plt.show()
+                print "Best fit rate: ",bestfitparam[0]
 
+                plt.figure()
+                plt.ylabel("count")
+                plt.xlabel("delta-t (s)")
+                plt.yscale('log')
+                plt.hist(deltatees,bins=200,color='b',label='run %04i'%args.RUNID,alpha=0.5)
+                Yfit = poisson(X,bestfitparam[0])
+        
+                plt.plot(X, Yfit,'r',linewidth=3.0,label='Poisson Fit')
+                plt.text(0.007,1000,'Poisson rate: %f Hz'%bestfitparam[0])
+                plt.legend()
+                plt.show()
+
+        print livetime
+        fit_uncorrelated_rate(poi_x,poi_y,livetime)
         
         # Charge distribution
         plt.ylabel("count")
@@ -312,12 +343,18 @@ else:
         print len(Log10DT)
 
         if args.DCUT:
-                Log10DT = Log10DT[Log10DT>-5.221848]
+                Log10DT = Log10DT[Log10DT>-5.221848]  # 6 us = -5.221848]
                 V=np.array([1/float(len(Log10DT))]*len(Log10DT))
-                rate = len(Log10DT+1)/float(sum(livetime))
+                rate = len(Log10DT+1)/livetime
                 print "rate: %f Hz"%rate
+        elif args.DCUT2:
+                Log10DT = Log10DT[Log10DT>-5.610833915635467]
+                V=np.array([1/float(len(Log10DT))]*len(Log10DT))
+                rate = len(Log10DT+1)/livetime
+                print "rate: %f Hz"%rate
+                
         else:
-                rate = sum(npulses)/sum(livetime)
+                rate = sum(npulses)/livetime
 
                 
         with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
@@ -340,7 +377,7 @@ else:
 
 
         
-        print "livetime: ",sum(livetime)," s"
+        print "livetime: ",livetime," s"
         print "npulses :", sum(npulses)
         print "rate: ",rate," Hz"
         

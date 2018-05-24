@@ -282,6 +282,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
         pedestal = Y[~signal_mask]
         if debug==True:
                 plt.hist(pedestal,bins=30)
+                plt.yscale('log')
                 plt.title("value of the non-signal")
                 plt.show()
                 
