@@ -164,9 +164,8 @@ def mainprogram():
                         plt.show()
 
         print "The beginning of the run: ",start_time
-        print "The end of the run: ",stop_time
-        print "The coincidence rate: ",float(ncoincidence)/(stop_time-start_time)
-
+        print "The end of the run: ",end_time
+        print "The coincidence rate: ",float(ncoincidence)/((end_time-start_time).total_seconds())
                         
 if __name__=='__main__':
         mainprogram()
