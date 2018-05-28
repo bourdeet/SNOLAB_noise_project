@@ -365,7 +365,7 @@ else:
 
                 W = np.array([sum(Log10DT[Log10DT>-6])/sum(HS14)]*len(HS14))
                 
-                plt.hist(HS14,bins=binning,range=[-8,-1],histtype='step',linewidth=2.0,color='k',label="Hitspool 2014",weights=W)
+                #plt.hist(HS14,bins=binning,range=[-8,-1],histtype='step',linewidth=2.0,color='k',label="Hitspool 2014",weights=W)
 
         
 
