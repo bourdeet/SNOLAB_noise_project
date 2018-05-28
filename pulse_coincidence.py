@@ -55,7 +55,7 @@ def mainprogram():
         parser.add_argument('--debug',dest='DEBUG',
                             help='Enter debug mode: plots subsets of traces',
                             action='store_true')
-
+ 
 
         args = parser.parse_args()
 
