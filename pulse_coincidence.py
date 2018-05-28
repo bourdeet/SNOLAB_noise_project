@@ -71,7 +71,9 @@ def mainprogram():
                 print "triggered file: ", trace.split('/')[-1]
                 number = int((trace.split('_')[-1]).split('.')[0])
 
-                readoutfile = "%s/C%i*%05i.trc"%(inputdir,args.READOUT,number)
+                proc = subprocess.Popen('ls %s/C%i*%05i.trc'%(inputdir,args.READOUT,number), stdout=subprocess.PIPE)
+
+                readoutfile = proc.stdout.read()
 
                 print "readout file: ",readoutfile 
                
