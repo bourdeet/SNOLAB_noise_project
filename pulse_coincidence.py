@@ -163,7 +163,9 @@ def mainprogram():
                         plt.hist(charge_readout,bins=30)
                         plt.show()
 
-        
+        print "The beginning of the run: ",start_time
+        print "The end of the run: ",stop_time
+        print "The coincidence rate: ",float(ncoincidence)/(stop_time-start_time)
 
                         
 if __name__=='__main__':
