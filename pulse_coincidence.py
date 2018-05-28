@@ -71,11 +71,9 @@ def mainprogram():
                 print "triggered file: ", trace.split('/')[-1]
                 number = int((trace.split('_')[-1]).split('.')[0])
 
-                print "retrieving receiving file: "
+                readoutfile = "%s/C%i*%05i.trc"%(inputdir,args.READOUT,number)
 
-                
-                if not os.path.isfile("%s/C%i*%05i.trc"%(inputdir,args.READOUT,number)):
-                        print "WARNING: could not find the corresponding file: "
+                print "readout file: ",readoutfile 
                
                 sys.exit()
                 
