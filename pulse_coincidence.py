@@ -165,7 +165,7 @@ def mainprogram():
 
         print "The beginning of the run: ",start_time
         print "The end of the run: ",end_time
-        print "The coincidence rate: ",float(ncoincidence)/((end_time-start_time).total_seconds())
+        print "The coincidence rate: ",float(ncoincidence)/((end_time-start_time).total_seconds()), " Hz"
                         
 if __name__=='__main__':
         mainprogram()
