@@ -68,10 +68,11 @@ def mainprogram():
         
         for trace in sorted(glob.glob(inputdir+triggerformat)):
 
-                print trace
+                print "triggered file: ", trace.split('/')[-1]
                 number = int((trace.split('_')[-1]).split('.')[0])
 
-                #os.system("ls %s/C%i*%i.trc"%(inputdir,args.READOUT,number))
+                print "retrieving receiving file: "
+                os.system("ls %s/C%i*%i.trc"%(inputdir,args.READOUT,number))
                
                 sys.exit()
                 
