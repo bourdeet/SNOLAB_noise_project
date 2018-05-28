@@ -72,7 +72,10 @@ def mainprogram():
                 number = int((trace.split('_')[-1]).split('.')[0])
 
                 print "retrieving receiving file: "
-                os.system("ls %s/C%i*%05i.trc"%(inputdir,args.READOUT,number))
+
+                
+                if not os.path.isfile("%s/C%i*%05i.trc"%(inputdir,args.READOUT,number)):
+                        print "WARNING: could not find the corresponding file: "
                
                 sys.exit()
                 
