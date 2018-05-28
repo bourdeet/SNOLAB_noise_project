@@ -72,8 +72,8 @@ def mainprogram():
                 number = int((trace.split('_')[-1]).split('.')[0])
 
                 #os.system("ls %s/C%i*%i.trc"%(inputdir,args.READOUT,number))
-                continue
-                #sys.exit()
+               
+                sys.exit()
                 
                 # Readout the trace
 
