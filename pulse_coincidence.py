@@ -15,7 +15,7 @@ import numpy as np
 import pickle
 import sys
 import matplotlib
-#matplotlib.use('agg')
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import glob
 import struct
