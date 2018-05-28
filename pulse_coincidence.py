@@ -77,7 +77,7 @@ def mainprogram():
 
                 readoutfile = proc.stdout.read()
 
-                print "readout file: ",readoutfile 
+                print "readout file: ",readoutfile.split('/')[-1] 
                
                 sys.exit()
                 
