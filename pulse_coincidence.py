@@ -15,13 +15,13 @@ import numpy as np
 import pickle
 import sys
 import matplotlib
-matplotlib.use('agg')
+#matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import glob
 import struct
 import os
 import subprocess
-
+import readTrc_master.readTrc as trc
 
 
         
@@ -38,13 +38,13 @@ def mainprogram():
         parser.add_argument('--trigger',dest='TRIGGER',
                             type=int,
                             help="Channel number of the triggering DOM",
-                            default=2
+                            default=3
         )
 
         parser.add_argument('--readout',dest='READOUT',
                             type=int,
                             help="Channel number of the receiving DOM",
-                            default=3
+                            default=2
         )
         
         parser.add_argument('-o', '--output',dest='OUTFILE',
@@ -52,7 +52,7 @@ def mainprogram():
                             default="coincidence_results.p")
                 
     
-        parser.add_argument('--debug',dest='DEBUG',
+        parser.add_argument('--debug',dest='debug',
                             help='Enter debug mode: plots subsets of traces',
                             action='store_true')
  
@@ -66,144 +66,104 @@ def mainprogram():
         readoutformat = "C%i_*.trc"%(args.READOUT)
 
         inputdir = args.INPUTDIR
-        
+        nprocessed = 0
+
+
+        ncoincidence=0
+        charge_trigger=[]
+        charge_readout=[]
         for trace in sorted(glob.glob(inputdir+triggerformat)):
-
-                print "triggered file: ", trace.split('/')[-1]
+                
+                triggerfile = trace.rstrip()
+                
+                if args.debug:
+                        print "triggered file: ", triggerfile.split('/')[-1]
+                        
                 number = int((trace.split('_')[-1]).split('.')[0])
-
                 proc = subprocess.Popen(['ls %s/C%i*%05i.trc'%(inputdir,args.READOUT,number)],
                                         stdout=subprocess.PIPE,shell=True)
-
-                readoutfile = proc.stdout.read()
-
-                print "readout   file: ",readoutfile.split('/')[-1] 
-               
-                sys.exit()
                 
+                readoutfile = proc.stdout.read().rstrip()
+                if args.debug:
+                        print "readout   file: ",readoutfile.split('/')[-1] 
+
                 # Readout the trace
+                #-----------------------------------------------------------------
+                data_trigger = trc.readTrc(triggerfile)
+                X = data_trigger[0]
+                trigger_times = data_trigger[2]
+                trigger_meta= data_trigger[3]
 
-                # Locate the pulses in the trace
+                # Adjust the time of the vector to  the individual triggered segments
+                # The timing is the exact same for the readout wavelength
+                
+                trace_length = trigger_meta['WAVE_ARRAY_COUNT']/trigger_meta['SUBARRAY_COUNT']
+                adjusted_time = (np.arange(0,len(X))%trace_length)*trigger_meta['HORIZ_INTERVAL']
+                trigtime_mapping = np.repeat(trigger_times['trigtime'],trace_length)  
+                offset_mapping = np.repeat(trigger_times['offset'],trace_length)
+                adjusted_time = adjusted_time+trigtime_mapping+offset_mapping
 
-                # save the time of these pulses
 
-                #for readout in 
-
-                #check if there's something in the readout
-
-                if something:
-                        coincidence+=1
+                # Record the file trigger time to compute the approximate livetime of the run
+                #------------------------------------------------------------------------------
+                if nprocessed==0:
+                        start_time = trigger_meta['TRIGGER_TIME']
                 else:
-                        coincidence=0
-                        #nothing
-        
-                p=0
-                nsequences=0
-                if args.INFILE!=None and args.INFILE !='':
-                        filelist=args.INFILE
-                        print "the filelist: ",filelist
-        
-                        if len(args.INFILE)==1:
-                                print "analyzing a single file: ",args.INFILE,"...\n"
-            
-                        elif len(args.INFILE)>1:
-                                print "analyzing multiple files...\n "
-            
+                        end_time = trigger_meta['TRIGGER_TIME']
 
-                        filetype=filelist[0]
-
-
-                        if filetype.endswith(".bin"):
-                                print "\nDetected a binary file."
-                                print "Importing relevant libraries..."
-
-                                from DPO3200bin_tools import parse_header,load_data_bin
-
-                                print "Searching corresponding header file..."
-                                genericname=filetype[:-8]
-                                headerfile=glob.glob(genericname+'header.txt')
-        
-                                if len(headerfile)<1:
-                                        sys.exit("ERROR: could not find a matching header file.")
-
-                                else:
-                                        print "Found! Parsing the header.."
-                                        header=parse_header(headerfile[0],len(filelist))
-
-                                if args.DEBUG:
-                                        header.nacq=10
-                                        sequence_length=header.data['stop']-header.data['start']+1
+                nprocessed+=1
 
                 
-                                for element in filelist:
-                                        if element.endswith(".bin"):
-                    
-                                                if os.path.exists(args.OUTFILE):
-                                                        pulses_info=pickle.load(open(args.OUTFILE,"rb"))
-                                                else:
-                                                        pulses_info=[]
-                        
-                                                newinfo=load_data_bin(element,header)
-                                                pulses_info=pulses_info+newinfo
-                                                pickle.dump(pulses_info,open(args.OUTFILE,"wb"))
-                                        
-                                                nsequences+=len(newinfo)
-                    
-                                print "Saved a total of ",nsequences," sequences to pickle files"
-            
-
-                        elif filetype.endswith(".trc"):
-                                print "\nDetected a LeCroy-formatted binary (.trc)"
-                                print "Importing relevant libraries..."
-
-                        
-            
-                                from trc_tools import load_data_trc
-                                print "...done."
-                                nfiles = 0
-                               
+                # Proceed to readout the receiving DOM
+                #--------------------------------------------------------------------
+                
+                data_readout = trc.readTrc(readoutfile)
+                
+                if args.debug:
+                        print "DEBUG MODE"
+                        for i in range(20,150):
+                                a = trace_length*i
+                                b = a+trace_length
+                                midpoint = a+trace_length/2
+                                plt.plot(adjusted_time[a:b],data_trigger[1][a:b],'o',label='trigger')
+                                plt.plot(adjusted_time[a:b],data_readout[1][a:b],label='readout')
+                                plt.plot([adjusted_time[midpoint],adjusted_time[midpoint]],[-0.01,0.005],'r')
+                                plt.show()
                                 
-                                for element in filelist:
-                                        if element.endswith(".trc"):
-                                                nfiles+=1
-                                                if nfiles%10==0:
-                                                        print "processed %i files..."%(nfiles)
-
-                                                X = element.split('_')[-1][0:5]#[3:8]
-                                                filennum = int(X)
-
-                                                # Save one pickle file per input trc file
-                                                newinfo,header=load_data_trc(element,threshold=args.THRESH,
-                                                                             interval=interval,
-                                                                             asSeq = args.FasS, #treat flasher runs as sequence runs
-                                                                             asFlash=args.SasF,
-                                                                             debug=args.DEBUG,
-                                                                             Nsample = args.WIDTH
-                                                )
-                                                # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
-                                                # Dump data
-                                                pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
-
-                                        del header,newinfo
-                    
-                                """
-                                elif filetype.endswith(".csv"):
-                                from otherfiles_tools import *
-            
-                                for element in filelist:
-                                        H,T,Y=load_data_csv(element)
+                readout_background = np.median(data_readout[1])
                 
-                                elif filetype.endswith(".p"):
-                                from otherfiles_tools import *
-                                for element in filelist:
-                                        H,T,Y=load_data_pickle(element)
-                                """
-                        else:
-                                print "******ERROR******\nI don't recognize your voodoo magic data type."
-                                sys.exit(-1)
+                for i in range(0,trigger_meta['SUBARRAY_COUNT']):
+                        a = trace_length*i
+                        b = a+trace_length
+                        start_integration = a+trace_length/2-3
+                        stop_integration = start_integration+15  # we restrict pulse search in the first 40ns after trigger
+                        integration_length = stop_integration-start_integration
 
-                else:
-                        print "ERROR. no file entered."
+                        Q_trigger = -sum(data_trigger[1][start_integration:stop_integration])
+                        charge_trigger.append(Q_trigger)
+                        Q_readout = -sum(data_readout[1][start_integration:stop_integration])
+
+                        # Record a coincidence only if 
+
+                        if Q_readout>(-3.5*readout_background*integration_length): # has been optimized to eliminate bad counts
+
+                                if args.debug:
+                                        plt.plot(adjusted_time[a:b],data_trigger[1][a:b],label='trigger')
+                                        plt.plot(adjusted_time[a:b],data_readout[1][a:b],label='readout')
+                                        plt.show()
+                                        
+                                ncoincidence+=1
+                                charge_readout.append(Q_readout)
+                        
+                print ncoincidence
+                        
+                if args.debug:
+                        plt.hist(charge_trigger,bins=30)
+                        plt.show()
+                        plt.hist(charge_readout,bins=30)
+                        plt.show()
+
+        
 
                         
 if __name__=='__main__':
