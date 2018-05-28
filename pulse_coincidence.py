@@ -66,7 +66,7 @@ def mainprogram():
 
         inputdir = args.INPUTDIR
         
-        for trace in glob.glob(inputdir+triggerformat):
+        for trace in sorted(glob.glob(inputdir+triggerformat)):
 
                 print trace
                 number = int((trace.split('_')[-1]).split('.')[0])
