@@ -140,7 +140,7 @@ def mainprogram():
                         integration_length = stop_integration-start_integration
 
                         Q_trigger = -sum(data_trigger[1][start_integration:stop_integration])
-                        charge_trigger.append(Q_trigger)
+                        #charge_trigger.append(Q_trigger)
                         Q_readout = -sum(data_readout[1][start_integration:stop_integration])
 
                         # Record a coincidence only if 
@@ -153,11 +153,10 @@ def mainprogram():
                                         plt.show()
                                         
                                 ncoincidence+=1
-                                charge_readout.append(Q_readout)
+                                #charge_readout.append(Q_readout)
                         
                 print ncoincidence
-                del charge_readout
-                del charge_trigger
+
                         
                 if args.debug:
                         plt.hist(charge_trigger,bins=30)
