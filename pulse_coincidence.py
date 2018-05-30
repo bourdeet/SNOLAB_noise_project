@@ -89,7 +89,7 @@ def mainprogram():
 
                 # Readout the trace
                 #-----------------------------------------------------------------
-                print trigger_file
+                print triggerfile
                 
                 data_trigger = trc.readTrc(triggerfile)
                 X = data_trigger[0]
