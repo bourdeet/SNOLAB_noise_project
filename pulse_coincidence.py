@@ -156,6 +156,8 @@ def mainprogram():
                                 charge_readout.append(Q_readout)
                         
                 print ncoincidence
+                del charge_readout
+                del charge_trigger
                         
                 if args.debug:
                         plt.hist(charge_trigger,bins=30)
