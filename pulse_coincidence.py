@@ -89,6 +89,8 @@ def mainprogram():
 
                 # Readout the trace
                 #-----------------------------------------------------------------
+                print trigger_file
+                
                 data_trigger = trc.readTrc(triggerfile)
                 X = data_trigger[0]
                 trigger_times = data_trigger[2]
@@ -155,7 +157,7 @@ def mainprogram():
                                 ncoincidence+=1
                                 #charge_readout.append(Q_readout)
                         
-                print ncoincidence
+                #print ncoincidence
 
                         
                 if args.debug:
