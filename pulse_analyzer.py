@@ -195,7 +195,7 @@ def mainprogram():
                                                 )
                                                 # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data
-                                                pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
+                                                pickle.dump([newinfo,header],open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
 
                                         del header,newinfo
                     

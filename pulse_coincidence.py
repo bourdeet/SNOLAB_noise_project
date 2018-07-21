@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse coincidence
-# last update: April 4th 2018
+# last update: May 30th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -89,7 +89,7 @@ def mainprogram():
 
                 # Readout the trace
                 #-----------------------------------------------------------------
-                print triggerfile
+                # print triggerfile
                 
                 data_trigger = trc.readTrc(triggerfile)
                 X = data_trigger[0]

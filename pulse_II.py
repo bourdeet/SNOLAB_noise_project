@@ -12,7 +12,7 @@
 #
 #######################################################
 
-
+import matplotlib
 from pulsetools import *
 import pickle
 import numpy as np
@@ -23,6 +23,8 @@ from scipy.optimize import curve_fit
 from scipy import asarray as ar,exp
 from scipy.misc import factorial
 import scipy
+
+
 
 parser = argparse.ArgumentParser(description="pulse II",
                                  formatter_class=RawTextHelpFormatter)
@@ -56,7 +58,9 @@ parser.add_argument('--deadcut',dest='DCUT',
 parser.add_argument('--deadcutII',dest='DCUT2',
                     help="Apply the 2.45 us cut to compute the rate",
                     action='store_true'
-                    ) 
+                    )
+
+
 parser.add_argument('--debug',dest='DEBUG',
                     action='store_true'
                     )
@@ -97,24 +101,68 @@ for pickled_file in glob.glob(args.INFILE):
                         if isinstance(sequence,PMT_DAQ_sequence):
 
                                 
-                                if sequence['npulses']>1:
+                                if sequence['npulses']>=1:
+                                    
                                         charge_array=np.array(sequence['charge'])
+                                        
                                         kept = charge_array>args.THRES
-                                        kept_charge = charge_array[kept]
+                                        kept_charge = charge_array#[kept]
+
 
                                         if 'flasher' not in sequence['mode']:
-                                                time_array  =np.array(sequence['time']) 
-                                                kept_times  = time_array[kept]
+                                            
+                                                time_array  =np.array(sequence['time'])
+                                                
+                                                kept_times  = time_array#[kept]
+                                                
                                                 times.append(kept_times)
-                                                deltatees.append(kept_times[1:]-kept_times[0:-1])
+                                                deltatees.append(kept_times[1:]-kept_times[:-1])
+                                                print len(kept_times)-len(kept_times[1:]-kept_times[:-1])
                                                 
                                         npulses.append(sum(kept))
-                                        charge.append(kept_charge)
+                                        charge.append(kept_charge)#[1:])
 
                               
 
 
 charge = np.concatenate(charge)
+Tiiime = np.concatenate(times)
+time_deltas = np.concatenate(deltatees)
+
+print len(Tiiime)
+print len(charge)
+plt.plot(Tiiime,charge)
+plt.show()
+
+
+plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+font = {'family' : 'normal',
+        'weight' : 'bold',
+        'size'   : 22}
+
+matplotlib.rc('font', **font)
+
+# 2D histogram of charge v. time of the second pulse w.r.t to its previous one
+#-----------------------------------------------------------------------------
+
+xedges, yedges = np.arange(-8.0,-1.0,0.1), np.arange(-0,20,0.2)
+
+# charge associated with the pair of pulses
+Q = charge[0:-1]+charge[1:]
+print len(charge)
+print len(Q)
+print len(Tiiime)
+
+H, xedges, yedges = np.histogram2d(np.log10(Tiiime),Q,(xedges,yedges))
+X, Y = np.meshgrid(xedges,yedges)
+plt.pcolormesh(np.transpose(X), np.transpose(Y), H)
+plt.colorbar()
+plt.xlabel('log10(dt)')
+plt.ylabel('charge of the pulse pair (pC)')
+plt.show()
+
+print len(charge)
+print len(Tiiime)
 
 """
 # check is there is a second input. If so, fetch the data for the container
@@ -342,6 +390,8 @@ else:
         Log10DT = np.log10(deltatees)
         print len(Log10DT)
 
+
+        
         if args.DCUT:
                 Log10DT = Log10DT[Log10DT>-5.221848]  # 6 us = -5.221848]
                 V=np.array([1/float(len(Log10DT))]*len(Log10DT))
