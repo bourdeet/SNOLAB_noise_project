@@ -3,6 +3,9 @@
 #
 #########################################
 import numpy as np
+import sys,os
+from sys import getsizeof
+import pickle
 
 from pulsetools import find_pulses_in_that_shit,find_pulses_array,find_pulses_flasherrun
 from pulsetools import PMT_DAQ_sequence
@@ -10,7 +13,7 @@ from pulsetools import header_data
 from readTrc_master import readTrc
 import matplotlib.pyplot as plt
 
-def parse_header_trc(trcformat):
+def parse_header_trc(trcformat,debug):
 
         header_container=header_data()
     
@@ -49,12 +52,13 @@ def parse_header_trc(trcformat):
         
         header_container.time['scale']=value*multiple 
         header_container.time['duration']=header_container.data['stop']-header_container.data['start']+1
-        header_container.time['vec']=np.arange(0,
-                                               header_container.time['duration']*header_container.windowscale['xincr'],\
-                                               header_container.windowscale['xincr'])
-
-
-                
+        if debug:
+            header_container.time['vec']=np.arange(0,
+                                                   header_container.time['duration']*header_container.windowscale['xincr'],\
+                                                   header_container.windowscale['xincr'])
+        else:
+            header_container.time['vec'] = None
+            
     
         return header_container
 
@@ -66,7 +70,12 @@ def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False
         seq_info=PMT_DAQ_sequence()
         X,Y,T,D=readTrc.readTrc(inputname)
 
-        header=parse_header_trc(D)
+        header=parse_header_trc(D,debug)
+
+        headername = inputname.split('.')[0][:-5]+"header.p"
+        if not os.path.isfile(headername):
+            print "Saving header for the run at ",headername
+            pickle.dump(header,open(headername,"wb"))
 
 
         if header.mode=='normal':
@@ -86,6 +95,23 @@ def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False
                 seq_info['npulses']=len(charge)
                 seq_info['mode']='normal'
 
+                print "printing the size of the stuff being saved..."
+                """
+                print getsizeof(charge)/1.e3
+                print getsizeof(times)/1.e3
+                print times.nbytes
+                print charge.nbytes
+                print len(charge)
+                print len(times)
+                print charge
+                print times
+                print type(times)
+                print type(charge)
+                print times.dtype
+                print charge.dtype
+                print len(np.unique(times))
+                print len(np.unique(charge))
+                """
         
 
         elif header.mode=='sequence':

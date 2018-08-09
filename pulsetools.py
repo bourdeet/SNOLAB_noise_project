@@ -108,6 +108,10 @@ def compute_pedestal(trace, n=1000):
 
     return np.mean(pedestal),np.std(trace),fives_threshold
 
+def gauss(x, *p):
+    A, mu, sigma = p
+    return A*np.exp(-(x-mu)**2/(2.*sigma**2))
+
 
 def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=False):
 
@@ -259,9 +263,10 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
         impedance = float(D['VERT_COUPLING'].split('_')[1])
 
         if debug:
-                plt.plot(time,Y,'r')#[0:10000],Y[0:10000],'r')
-                plt.title('data, adjusted timing')
-                plt.show()
+                #plt.plot(time,Y,'r')#[0:10000],Y[0:10000],'r')
+                #plt.title('data, adjusted timing')
+                #plt.show()
+                print "d"
 
         # Select data below threshold (must be done BEFORE removing pedestal)
         #-------------------------------------------------------------------
@@ -271,21 +276,41 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
 
         
         if debug:
-                plt.plot(time,signal,'r')#[0:10000],signal[0:10000],'r')
-                plt.title('data below threshold')
-                plt.show()
-
+                #plt.plot(time,signal,'r')#[0:10000],signal[0:10000],'r')
+                #plt.title('data below threshold')
+                #plt.show()
+                print "d"
                 
         # Compute and subtract pedestal
         #--------------------------------------------------------------------
         
         pedestal = Y[~signal_mask]
+        median = np.median(pedestal)
+        ped_sigma = np.std(pedestal)
+        
         if debug==True:
-                plt.hist(pedestal,bins=30)
-                plt.yscale('log')
-                plt.title("value of the non-signal")
-                plt.show()
+
+                from scipy.optimize import curve_fit
+
+                hist, bin_edges = np.histogram(pedestal,bins=25)
+                bin_centres = (bin_edges[:-1] + bin_edges[1:])/2
                 
+                p0 = [len(pedestal), np.mean(pedestal), np.std(pedestal)]
+                coeff, var_matrix = curve_fit(gauss, bin_centres, hist, p0=p0)
+                hist_fit = gauss(bin_centres, *coeff)
+
+                plt.hist(pedestal,bins=25)
+                plt.plot(bin_centres,hist_fit,'r')
+                plt.plot([coeff[1]-4*coeff[2],coeff[1]-4*coeff[2]],[0.,2000000],'g',linewidth=2.)
+                plt.plot([coeff[1]+4*coeff[2],coeff[1]+4*coeff[2]],[0.,2000000],'g',linewidth=2.)
+                #plt.yscale('log')
+                plt.title("value of the non-signal")
+
+                print "\n\n\n***********************\n\n"
+                print "Pedestal cut threshold: ",coeff[1]-4*coeff[2]
+                print "\n\n***********************\n\n\n"
+                plt.show()
+                sys.exit()
         pedestal = np.median(pedestal)
         signal = signal-pedestal*(signal_mask)
         
@@ -343,7 +368,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
 
         pulses = np.split(signal*selected_pulse*sample_res_ns/impedance*1000,start+1)
 
-        print start+1
+        #print start+1
 
         if debug==True:
                 for element in pulses:

@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse analyzer
-# last update: April 4th 2018
+# last update: August 9th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -184,7 +184,8 @@ def mainprogram():
 
                                                 X = element.split('_')[-1][0:5]#[3:8]
                                                 filennum = int(X)
-
+                                        
+                                                
                                                 # Save one pickle file per input trc file
                                                 newinfo,header=load_data_trc(element,threshold=args.THRESH,
                                                                              interval=interval,
@@ -195,7 +196,7 @@ def mainprogram():
                                                 )
                                                 # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data
-                                                pickle.dump([newinfo,header],open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
+                                                pickle.dump(newinfo,open(args.OUTFILE[:-2]+"_%05i.p"%filennum,"wb"))
 
                                         del header,newinfo
                     
