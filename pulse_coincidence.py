@@ -22,7 +22,7 @@ import struct
 import os
 import subprocess
 import readTrc_master.readTrc as trc
-
+import datetime
 
         
 def mainprogram():
@@ -70,6 +70,7 @@ def mainprogram():
 
 
         ncoincidence=0
+        livetime=0.0
         charge_trigger=[]
         charge_readout=[]
         for trace in sorted(glob.glob(inputdir+triggerformat)):
@@ -84,8 +85,8 @@ def mainprogram():
                                         stdout=subprocess.PIPE,shell=True)
                 
                 readoutfile = proc.stdout.read().rstrip()
-                if args.debug:
-                        print "readout   file: ",readoutfile.split('/')[-1] 
+                #if args.debug:
+                print "readout   file: ",readoutfile.split('/')[-1] 
 
                 # Readout the trace
                 #-----------------------------------------------------------------
@@ -93,13 +94,18 @@ def mainprogram():
                 
                 data_trigger = trc.readTrc(triggerfile)
                 X = data_trigger[0]
+
+                #trigger time of the 5000 pulses saved in the file
                 trigger_times = data_trigger[2]
+        
                 trigger_meta= data_trigger[3]
 
+                
                 # Adjust the time of the vector to  the individual triggered segments
                 # The timing is the exact same for the readout wavelength
                 
                 trace_length = trigger_meta['WAVE_ARRAY_COUNT']/trigger_meta['SUBARRAY_COUNT']
+
                 adjusted_time = (np.arange(0,len(X))%trace_length)*trigger_meta['HORIZ_INTERVAL']
                 trigtime_mapping = np.repeat(trigger_times['trigtime'],trace_length)  
                 offset_mapping = np.repeat(trigger_times['offset'],trace_length)
@@ -110,10 +116,14 @@ def mainprogram():
                 #------------------------------------------------------------------------------
                 if nprocessed==0:
                         start_time = trigger_meta['TRIGGER_TIME']
+                        end_time = trigger_meta['TRIGGER_TIME']+datetime.timedelta(seconds = adjusted_time[-1])
                 else:
                         end_time = trigger_meta['TRIGGER_TIME']
 
                 nprocessed+=1
+
+                # Better way of doing this: add up the livetime of each file together
+                livetime+=adjusted_time[-1]-adjusted_time[0]
 
                 
                 # Proceed to readout the receiving DOM
@@ -130,8 +140,9 @@ def mainprogram():
                                 plt.plot(adjusted_time[a:b],data_trigger[1][a:b],'o',label='trigger')
                                 plt.plot(adjusted_time[a:b],data_readout[1][a:b],label='readout')
                                 plt.plot([adjusted_time[midpoint],adjusted_time[midpoint]],[-0.01,0.005],'r')
+                                #plt.legend() somehow, this fucks up the program if running without gtk
                                 plt.show()
-                                
+                
                 readout_background = np.median(data_readout[1])
                 
                 for i in range(0,trigger_meta['SUBARRAY_COUNT']):
@@ -169,6 +180,7 @@ def mainprogram():
         print "The beginning of the run: ",start_time
         print "The end of the run: ",end_time
         print "The coincidence rate: ",float(ncoincidence)/((end_time-start_time).total_seconds()), " Hz"
+        print "Deadtime-corrected rate: ",float(ncoincidence)/livetime," Hz"
                         
 if __name__=='__main__':
         mainprogram()
