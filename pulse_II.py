@@ -175,8 +175,73 @@ def get_hist_stats(H,x,y):
             
 
     
+def parse_pseries(list_of_files,burst_thresh=1.e-6):
 
+    # Load data containers
+    #------------------------------------------------------------------
+    charge=[]
+    Q_pair = []  # Summed charge of two consecutive pulses
+    Q_ratio = [] # Ratio of Q(pulse 1) / Q(pulse 2)
+    deltatees=[]
+    npulses=[]
+    livetime=[]
+    mode=[]
+    times=[]
+
+    # Burst finder
+    #------------------------------------------------------------------
+    burst_threshold = 1.e-6 # Choosing a timescale much smaller than the thermal one
+    bursts_charge_list = []
+    bursts_time_list = []
+
+    for pickled_file in list_of_files:
     
+        if 'header' not in pickled_file:
+
+            data = pickle.load(open(pickled_file,"rb"))
+                
+
+            for sequence in data:
+                    
+                livetime.append(sequence['livetime'])
+                mode.append(sequence['mode'])
+
+                bt,bc=burst_finder(sequence,burst_threshold)
+                        
+                if type(bc) is not list:
+                    print type(bc)
+                    sys.exit()
+                            
+                bursts_charge_list+=bc
+                bursts_time_list+=bt
+                        
+                # Get rid of a nested list problem
+                if isinstance(sequence,list):
+                    sequence=sequence[0]
+
+                if isinstance(sequence,PMT_DAQ_sequence):
+                    
+                    if sequence['npulses']>=1:
+                                    
+                        charge_array=np.array(sequence['charge'])                
+                        kept = charge_array>args.THRES
+                        kept_charge = charge_array[kept]
+
+
+                        if 'flasher' not in sequence['mode']:
+                            
+                            time_array  =np.array(sequence['time'])                    
+                            kept_times  = time_array[kept] 
+                            times.append(kept_times)
+                                               
+                            Q_pair.append(kept_charge[:-1]+kept_charge[1:])
+                            Q_ratio.append(kept_charge[:-1]/kept_charge[1:])
+                            deltatees.append(kept_times[1:]-kept_times[:-1])
+                                                
+                        npulses.append(sum(kept))
+                        charge.append(kept_charge)
+    
+    return charge,times,deltatees,Q_pair,Q_ratio,livetime,npulses,mode,bursts_charge_list,bursts_time_list
 
 # Load Data from the main input
 #------------------------------------------------------------------
