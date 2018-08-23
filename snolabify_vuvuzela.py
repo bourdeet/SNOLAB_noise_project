@@ -76,7 +76,7 @@ def snolabify(input_file,output_file,pseries='I3MCPulseSeriesMap',dom='20-11'):
     # Save the output file
     #==============================================================
     import pickle
-    
+    print "writing file..."
     pickle.dump(list_of_seq,open("snolabified_%i_%i.p"%(str_to_check,om_to_check),"wb"))
     
 
@@ -105,7 +105,7 @@ if __name__=='__main__':
                         default="I3MCPulseSeriesMap")
 
     parser.add_argument('--dom',
-                        help='Specify which dom to save (format: SS-DD or ALL)',
+                        help='Specify which dom to save (format: SS-DD)',
                         default = '20-11')
 
     args = parser.parse_args()
