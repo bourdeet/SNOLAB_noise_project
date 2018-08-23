@@ -65,7 +65,7 @@ if __name__=='__main__':
             file_number  = float(core_file.split('_')[-1])
             new_f = "snolabified_"+f.split("/")[-1].split(".i3")[0]+".p"
             
-            sno.snolabify(f,new_directory+new_f,args.pseries,target_dom)
+            sno.snolabify(f,new_directory+new_f,args.pseries,args.dom)
     
 
         
