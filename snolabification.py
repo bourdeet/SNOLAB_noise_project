@@ -71,6 +71,6 @@ if __name__=='__main__':
             new_f = "snolabified_%s"%(args.dom)+f.split("/")[-1].split(".i3")[0]+".p"
 
             sno.snolabify(f,new_directory+new_f,args.pseries,args.dom)
-            n_processed_file+=1
+            n_processed+=1
 
         
