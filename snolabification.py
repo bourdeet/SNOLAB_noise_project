@@ -59,6 +59,9 @@ if __name__=='__main__':
 
         if 'wavedeformed' not in f:
 
+            print f
+            print new_directory+new_f
+
             # Retrieve the file number and define the output file name
 
             core_file = f.split(".i3")[0]
