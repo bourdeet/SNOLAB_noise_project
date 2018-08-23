@@ -49,7 +49,7 @@ if __name__=='__main__':
     # Loop over file and run process_wavedeform
     #=======================================================
 
-    import snolabify_vuvuzela as s
+    import snolabify_vuvuzela as sno
 
     for f in files_to_process:
 
