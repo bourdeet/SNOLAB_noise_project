@@ -55,20 +55,22 @@ if __name__=='__main__':
 
     import snolabify_vuvuzela as sno
 
+    n_processed=0
     for f in files_to_process:
 
+        if n_processed%100==0:
+            print n_processed," processed files."
+        
         if 'wavedeformed' not in f:
 
-            
 
             # Retrieve the file number and define the output file name
 
             core_file = f.split(".i3")[0]
             file_number  = float(core_file.split('_')[-1])
-            new_f = "snolabified_"+f.split("/")[-1].split(".i3")[0]+".p"
-            print f
-            print new_directory+new_f
+            new_f = "snolabified_%s"%(args.dom)+f.split("/")[-1].split(".i3")[0]+".p"
+
             sno.snolabify(f,new_directory+new_f,args.pseries,args.dom)
-    
+            n_processed_file+=1
 
         

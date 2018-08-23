@@ -76,7 +76,7 @@ parser.add_argument('--temp',
 
 parser.add_argument('--scale',
                     type=float,
-                    default=10000,
+                    default=100,
                     help="Fixed scale of the log10dt plot")
 
 parser.add_argument('--output',
@@ -447,6 +447,8 @@ def poisson(X,expected_rate):
 def fit_uncorrelated_rate(poi_x,poi_y,livetime,bins):
                 
                 import scipy.optimize as optimization
+
+                
                 bestfitparam,cov= optimization.curve_fit(poisson, poi_x,poi_y,500,max_nfev=1000,method='trf',bounds=[100,6000],diff_step=1,verbose=2,xtol=1e-40)
         
                 print "Best fit rate: ",bestfitparam[0]
@@ -477,6 +479,7 @@ if not ('flasher' in mode):
     
     times = np.concatenate(times)
     deltatees = np.concatenate(deltatees)
+    deltatees = deltatees[deltatees>0.]
     V=np.array([1/float(len(deltatees))]*len(deltatees))
     
     # Define the binning for delta-t histogram comparison
@@ -499,7 +502,8 @@ if not ('flasher' in mode):
         
     poi_x= X[(X>0.004)]
     poi_y= y[(X>0.004)]
-        
+
+
     fit_uncorrelated_rate(poi_x,poi_y,livetime,X)
 
 
@@ -524,6 +528,7 @@ if not ('flasher' in mode):
 
         
     # Log10(delta-t)
+    
     Log10DT = np.log10(deltatees)
     low_dt = sum(Log10DT<=-7.)
     print "Fraction of hits below 10^-7 s: ",float(low_dt)/len(Log10DT)
@@ -545,17 +550,17 @@ if not ('flasher' in mode):
     else:
         rate = sum(npulses)/livetime
 
-                
+    """
     with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
 
         HS14,_=pickle.load(hitspool)
         HS14=np.asarray(HS14)
         #W=np.array([1/float(len(HS14))]*len(HS14))
         
-        W = np.array([sum(Log10DT[Log10DT>-6])/sum(HS14)]*len(HS14))
+        #W = np.array([sum(Log10DT[Log10DT>-6])/sum(HS14)]*len(HS14))
                 
         #plt.hist(HS14,bins=binning,range=[-8,-1],histtype='step',linewidth=2.0,color='k',label="Hitspool 2014",weights=W)
-
+    """
         
 
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')

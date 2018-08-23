@@ -76,7 +76,6 @@ def snolabify(input_file,output_file,pseries='I3MCPulseSeriesMap',dom='20-11'):
     # Save the output file
     #==============================================================
     import pickle
-    print "writing file..."
     pickle.dump(list_of_seq,open(output_file,"wb"))
     
 
