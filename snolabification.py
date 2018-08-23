@@ -22,6 +22,10 @@ if __name__=='__main__':
     parser.add_argument("--folder",
                         required = True,
                         help="Folder containing DOMlaunched i3 files")
+
+    parser.add_argument('--pseries',
+                        help='Pulse series to use.',
+                        default="I3MCPulseSeriesMap")
     
     parser.add_argument('--dom',
                         help='dom for which you want a snolab-style pulse series',
@@ -61,7 +65,7 @@ if __name__=='__main__':
             file_number  = float(core_file.split('_')[-1])
             new_f = "snolabified_"+f.split("/")[-1].split(".i3")[0]+".p"
             
-            sno.snolabify(f,new_directory+new_f,pseries,target_dom)
+            sno.snolabify(f,new_directory+new_f,args.pseries,target_dom)
     
 
         
