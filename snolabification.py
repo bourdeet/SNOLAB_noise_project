@@ -59,15 +59,15 @@ if __name__=='__main__':
 
         if 'wavedeformed' not in f:
 
-            print f
-            print new_directory+new_f
+            
 
             # Retrieve the file number and define the output file name
 
             core_file = f.split(".i3")[0]
             file_number  = float(core_file.split('_')[-1])
             new_f = "snolabified_"+f.split("/")[-1].split(".i3")[0]+".p"
-            
+            print f
+            print new_directory+new_f
             sno.snolabify(f,new_directory+new_f,args.pseries,args.dom)
     
 
