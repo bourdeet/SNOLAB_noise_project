@@ -39,8 +39,12 @@ if __name__=='__main__':
     # Produce an output directory for the dom you are analyzing
     #=======================================================
 
+    import os
+    
     new_directory = args.folder+"/"+args.dom+"/"
-
+    
+    if not os.path.exists(new_directory):
+        os.makedirs(new_directory)
 
     # Loop over file and run process_wavedeform
     #=======================================================
