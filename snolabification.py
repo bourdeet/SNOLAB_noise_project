@@ -39,7 +39,7 @@ if __name__=='__main__':
     # Produce an output directory for the dom you are analyzing
     #=======================================================
 
-    new_directory = folder+"/"+args.dom+"/"
+    new_directory = args.folder+"/"+args.dom+"/"
 
 
     # Loop over file and run process_wavedeform
