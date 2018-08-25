@@ -9,7 +9,7 @@
 #------------------------------------------------------------------
 
 
-A = {'name':'Chabahar (03-40)',
+A = {'name':'Chabahar',
      'T':18,
      'inice':'03-40',
      '0.25pe':0.25,
@@ -19,7 +19,7 @@ A = {'name':'Chabahar (03-40)',
 }
 
 
-B = {'name':'Cloudsat (13-51)',
+B = {'name':'Cloudsat',
      'T':13,
      'inice':'13-51',
      '0.25pe':0.25,
@@ -28,7 +28,7 @@ B = {'name':'Cloudsat (13-51)',
      'qpair':20
 }
 
-C = {'name':'Durk (20-11)',
+C = {'name':'Durk',
      'T':29,
      'inice':'20-11',
      '0.25pe':0.25,
@@ -37,7 +37,7 @@ C = {'name':'Durk (20-11)',
      'qpair':20
 }
 
-D = {'name':'St_Anton (22-58)',
+D = {'name':'St_Anton',
      'T':10,
      'inice':'22-58',
      '0.25pe':0.25,
@@ -46,8 +46,9 @@ D = {'name':'St_Anton (22-58)',
      'qpair':20
 }
 
-E = {'name':'Columbia (40-22)',
+E = {'name':'Columbia',
      'T':25,
+     'inice':"40-22",
      '0.25pe':0.25,
      'scale':150,
      'spe':1.00,
@@ -55,7 +56,7 @@ E = {'name':'Columbia (40-22)',
 }
 
 
-F = {'name':'Ekedalsgatan (77-33)',
+F = {'name':'Ekedalsgatan',
      'T':21,
      'inice':'77-33',
      '0.25pe':0.25,
@@ -65,7 +66,7 @@ F = {'name':'Ekedalsgatan (77-33)',
 }
 
 
-G = {'name':'Flodtagging (81-25)',
+G = {'name':'Flodtagging',
      'T':15,
      'inice':'81-25',
      '0.25pe':0.25,
@@ -75,7 +76,7 @@ G = {'name':'Flodtagging (81-25)',
 }
 
 
-H = {'name':'Hallon (82-51)',
+H = {'name':'Hallon',
      'T':10,
      'inice':'82-51',
      '0.25pe':0.25,
@@ -84,7 +85,7 @@ H = {'name':'Hallon (82-51)',
      'qpair':20
 }
 
-I = {'name':'Mark (85-33)',
+I = {'name':'Mark',
      'T':15,
      'inice':'85-33',
      '0.25pe':0.25,

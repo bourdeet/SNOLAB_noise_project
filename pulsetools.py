@@ -310,7 +310,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
                 print "Pedestal cut threshold: ",coeff[1]-4*coeff[2]
                 print "\n\n***********************\n\n\n"
                 plt.show()
-                sys.exit()
+                #sys.exit()
         pedestal = np.median(pedestal)
         signal = signal-pedestal*(signal_mask)
         
