@@ -15,12 +15,12 @@ This is a repository containing a mixture of tools used by the progams in the ma
 
 ## Old scripts 
 
- * `oscilloscope_program.py` is meant to run a DPO3000 oscilloscope that's connected to your computer via USB. It saves waveforms in binary format
+* `oscilloscope_program.py` is meant to run a DPO3000 oscilloscope that's connected to your computer via USB. It saves waveforms in binary format
 
-`DPO3200bin_tools.py`: library used to handle binary data coming out of a Tektronix DPO3200 GHz oscilloscope.
+* `DPO3200bin_tools.py`: library used to handle binary data coming out of a Tektronix DPO3200 GHz oscilloscope.
 
-`oscilloscope_program.py`: waveform acquisition program that automatically saves waveforms to binary format (for the DPO3200 firmware)
+* `oscilloscope_program.py`: waveform acquisition program that automatically saves waveforms to binary format (for the DPO3200 firmware)
 
-`otherfiles_tools.py`: library to readout other file formats used by oscilloscopes, such as csv data.
+* `otherfiles_tools.py`: library to readout other file formats used by oscilloscopes, such as csv data.
 
-`pulse_generator.py`: very basic code that produces fake pulses with a background pedestal
+* `pulse_generator.py`: very basic code that produces fake pulses with a background pedestal
