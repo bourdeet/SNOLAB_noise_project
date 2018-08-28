@@ -65,7 +65,7 @@ def get_hist_stats(H,x,y):
 
 
     
-def parse_pseries(list_of_files,burst_thresh=1.e-6):
+def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6):
 
     import pickle
     from pulsetools import PMT_DAQ_sequence
@@ -120,7 +120,7 @@ def parse_pseries(list_of_files,burst_thresh=1.e-6):
                     if sequence['npulses']>=1:
                                     
                         charge_array=np.array(sequence['charge'])                
-                        kept = charge_array>burst_thresh
+                        kept = charge_array>pulse_threshold
                         kept_charge = charge_array[kept]
 
 
@@ -240,90 +240,35 @@ if __name__=='__main__':
     #------------------------------------------------------------------
     titlename=args.dom+", -%i$^{\circ}$C"%args.temp
 
-
-    # Load data containers
-    #------------------------------------------------------------------
-
-    charge=[]
-    Q_pair = []  # Summed charge of two consecutive pulses
-    Q_ratio = [] # Ratio of Q(pulse 1) / Q(pulse 2)
-    deltatees=[]
-    npulses=[]
-    livetime=[]
-    mode=[]
-    times=[]
-
-
     # Burst finder
     #------------------------------------------------------------------
 
     burst_threshold = 1.e-6 # Choosing a timescale much smaller than the thermal one
-    bursts_charge_list = []
-    bursts_time_list = []
 
 
-    # Load Data from the main input
+    # Unpack data from the pickle find using pseries parser
     #------------------------------------------------------------------
-
-    for pickled_file in glob.glob(args.INFILE):
     
-        if 'header' not in pickled_file:
+    list_of_files = sorted(glob.glob(args.INFILE))
+    data_pack = parse_pseries(list_of_files,pulse_threshold=args.THRES,burst_thresh=burst_threshold)
 
-            data = pickle.load(open(pickled_file,"rb"))
-                
+    charge        = data_pack[0]
+    times         = data_pack[1]
+    deltatees     = data_pack[2]
+    Q_pair        = data_pack[3]
+    Q_ratio       = data_pack[4]
+    livetime      = data_pack[5]
+    npulses       = data_pack[6]
+    mode          = data_pack[7]
+    bursts_charge = data_pack[8]
+    bursts_time   = data_pack[9]
+    
 
-            for sequence in data:
-                    
-                livetime.append(sequence['livetime'])
-                mode.append(sequence['mode'])
-
-                bt,bc=burst_finder(sequence,burst_threshold)
-
-                if type(bc) is not list:
-                    print type(bc)
-                    sys.exit()
-                            
-                bursts_charge_list+=bc
-                bursts_time_list+=bt
-                        
-                # Get rid of a nested list problem
-                if isinstance(sequence,list):
-                    
-                    sequence=sequence[0]
-
-                    if isinstance(sequence,PMT_DAQ_sequence):
-
-                        
-                        if sequence['npulses']>=1:
-                                    
-                            charge_array=np.array(sequence['charge'])
-                            
-                            kept = charge_array>args.THRES
-                            kept_charge = charge_array[kept]
-
-
-                            if 'flasher' not in sequence['mode']:
-                                            
-                                time_array  =np.array(sequence['time'])
-                                
-                                kept_times  = time_array[kept]
-                                                
-                                times.append(kept_times)
-
-                                Q_pair.append(kept_charge[:-1]+kept_charge[1:])
-                                Q_ratio.append(kept_charge[:-1]/kept_charge[1:])
-                                deltatees.append(kept_times[1:]-kept_times[:-1])
-                                                
-                            npulses.append(sum(kept))
-                            charge.append(kept_charge)
-
-                              
-
-
+    # Evaluate / compute quantities extracted from the pulse series
+    #====================================================================
     # Time-series quantities
     charge = np.concatenate(charge)
     Tiiime = np.concatenate(times)
-
 
     # Differential quantities
     time_deltas = np.concatenate(deltatees)
@@ -337,10 +282,9 @@ if __name__=='__main__':
     print "npulses :", sum(npulses)
     print "rate: ",rate," Hz"
 
-    
     # Burst data
-    bc_array  = bursts_charge_list # these are lists of arrays. One array = one burst
-    bt_array  = bursts_time_list
+    bc_array  = bursts_charge # these are lists of arrays. One array = one burst
+    bt_array  = bursts_time
     burst_sizes=[]
     burst_durations=[]
     burst_deltatees=[]
@@ -366,9 +310,10 @@ if __name__=='__main__':
 
 
 
-    #-----------------------------------------------------------------------------
+    #============================================================================
     # Plotting begins
-    #-----------------------------------------------------------------------------
+    #============================================================================
+    
     pdf = PdfPages(args.output)
 
 
@@ -406,7 +351,7 @@ if __name__=='__main__':
 
 
     # 2D histogram: charge ratio v. delta-t
-    #-----------------------------------------------------------------------------
+    #==============================================================================
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
     font = {'family' : 'normal',
             'weight' : 'bold',
