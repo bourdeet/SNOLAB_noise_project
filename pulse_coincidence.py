@@ -2,7 +2,7 @@
 
 #######################################################
 # pulse coincidence
-# last update: May 30th 2018
+# last update: August 28th 2018
 #
 # Author: Etienne Bourbeau
 #         (etienne.bourbeau@icecube.wisc.edu)
@@ -14,6 +14,7 @@ from argparse import RawTextHelpFormatter
 import numpy as np
 import pickle
 import sys
+sys.path.append("./utils/")
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt

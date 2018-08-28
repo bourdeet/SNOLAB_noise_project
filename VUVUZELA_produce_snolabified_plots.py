@@ -8,6 +8,8 @@
 # used with snolabified data from vuvuzela simulation
 #######################################################
 
+import sys
+sys.path.append("./utils/")
 
 
 if __name__=='__main__':

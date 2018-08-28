@@ -14,6 +14,7 @@ from argparse import RawTextHelpFormatter
 import numpy as np
 import pickle
 import sys
+sys.path.append("./utils/")
 import matplotlib.pyplot as plt
 import glob
 import struct
@@ -148,7 +149,7 @@ def mainprogram():
                                         sequence_length=header.data['stop']-header.data['start']+1
 
                 
-                                for element in filelist:
+                                for element in sorted(filelist):
                                         if element.endswith(".bin"):
                     
                                                 if os.path.exists(args.OUTFILE):
@@ -177,6 +178,7 @@ def mainprogram():
                                
                                 
                                 for element in filelist:
+                                        print element
                                         if element.endswith(".trc"):
                                                 nfiles+=1
                                                 if nfiles%10==0:
@@ -192,7 +194,8 @@ def mainprogram():
                                                                              asSeq = args.FasS, #treat flasher runs as sequence runs
                                                                              asFlash=args.SasF,
                                                                              debug=args.DEBUG,
-                                                                             Nsample = args.WIDTH
+                                                                             Nsample = args.WIDTH,
+                                                                             n=nfiles
                                                 )
                                                 # pickle.dump(header,open(args.OUTFILE[:-2]+"_header.p","wb"))
                                                 # Dump data

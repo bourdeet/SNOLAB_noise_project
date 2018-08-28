@@ -63,7 +63,7 @@ def parse_header_trc(trcformat,debug):
         return header_container
 
 
-def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False,debug=False,Nsample = 3):
+def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False,debug=False,Nsample = 3,n=0):
         
         #********** Raw data show negative pulses ********
 
@@ -81,13 +81,13 @@ def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False
         if header.mode=='normal':
                
         
-                if debug:
-                        plt.plot(X,Y)
-                        plt.title('raw data')
-                        plt.show()
+                #if debug:
+                #        plt.plot(X,Y)
+                #        plt.title('raw data')
+                #        plt.show()
                         
                 #charge,times=find_pulses_in_that_shit(header,Y,threshold,Inverted=True,debug=debug)
-                charge,times = find_pulses_array(X,Y,D,threshold=threshold,debug=debug,Nsample=Nsample)
+                charge,times = find_pulses_array(X,Y,D,threshold=threshold,debug=debug,Nsample=Nsample,n=n)
     
                 seq_info['charge']=charge
                 seq_info['time']=times

@@ -20,6 +20,7 @@
 #------------------------------------------------------------------
 import argparse
 import sys
+sys.path.append("./utils/")
 import glob
 import subprocess
 
@@ -40,23 +41,15 @@ parser.add_argument('--vuvuzela',
 
 parser.add_argument('--rearange',
                     help='rearange the pdf pages',
-                    Default=True)
+                    default=True)
 
 args = parser.parse_args()
 
 
 
 
-if args.vuvuzela:
-    print "Producing plots for vuvuzela simulation..."
-    from vuvuzela_doms import *
-    
-else:
-    print "producing plots with data from SNOLab..."
-    from lab_doms import *
+from lab_doms import *
 
-
-sys.exit()
 
 
 analysis_folder = "/home/etienne/NBI/SNOLab/analysis_data/March18/"
@@ -131,7 +124,7 @@ for dom in doms_to_plot:
                 #-------------------------------------------------
                 arguments = " --input \"%s\" "%(folder+name_pattern)
                 arguments+= "--run %i "%run_number
-                arguments+= "--threshold %f "%dom['0.25pe']
+                arguments+= "--threshold %f "%(dom['spe']*0.25)
                 arguments+= "--dom %s "%dom['name']
                 arguments+= "--temp %i "%temp
                 arguments+= "--scale %f "%(dom['scale'])

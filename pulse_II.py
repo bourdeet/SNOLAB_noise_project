@@ -13,6 +13,7 @@
 #######################################################
 
 import sys
+sys.path.append("./utils/")
 import numpy as np
 
 # Define some functions
