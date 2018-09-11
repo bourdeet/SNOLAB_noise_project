@@ -14,8 +14,8 @@ A = {'name':'Chabahar',
      'inice':'03-40',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':70000.,#1. if using the wavecalibrated charge tag
+     'qpair':5
 }
 
 
@@ -24,8 +24,8 @@ B = {'name':'Cloudsat',
      'inice':'13-51',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':75000.00,
+     'qpair':5
 }
 
 C = {'name':'Durk',
@@ -33,8 +33,8 @@ C = {'name':'Durk',
      'inice':'20-11',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':75000.00,
+     'qpair':5
 }
 
 D = {'name':'St_Anton',
@@ -42,7 +42,7 @@ D = {'name':'St_Anton',
      'inice':'22-58',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
+     'spe':75000.00,
      'qpair':20
 }
 
@@ -51,8 +51,8 @@ E = {'name':'Columbia',
      'inice':"40-22",
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':60000.00,
+     'qpair':5
 }
 
 
@@ -61,8 +61,8 @@ F = {'name':'Ekedalsgatan',
      'inice':'77-33',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':75000.00,
+     'qpair':5
 }
 
 
@@ -71,8 +71,8 @@ G = {'name':'Flodtagging',
      'inice':'81-25',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':75000.00,
+     'qpair':5
 }
 
 
@@ -81,8 +81,8 @@ H = {'name':'Hallon',
      'inice':'82-51',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':75000.00,
+     'qpair':5
 }
 
 I = {'name':'Mark',
@@ -90,8 +90,8 @@ I = {'name':'Mark',
      'inice':'85-33',
      '0.25pe':0.25,
      'scale':150,
-     'spe':1.00,
-     'qpair':20
+     'spe':75000.00,
+     'qpair':5
 }
 
 

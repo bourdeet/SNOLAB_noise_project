@@ -14,8 +14,8 @@ Aludsparken = {'name':'Aluddsparken',
                'T30':177,
                'T40':172,
                'scale':150,
-               'spe':5.13,
-               'qpair':20
+               'spe':4.104,#5.13,#m10 run must be divided by 0.8
+               'qpair':30
                }
 
 Skogshare = {'name':'Skogshare',
@@ -24,7 +24,7 @@ Skogshare = {'name':'Skogshare',
              'T30':124,
              'T40':143,
              'scale':150,
-             'spe':2.1,
+             'spe':0.81,
              'qpair':14
              }
 
@@ -48,5 +48,5 @@ Antarctica = {'name':'Antarctica',
               'qpair':7.
                }
 
-doms_to_plot = [Aludsparken, Skogshare, Ingladsil, Antarctica]
+doms_to_plot = [Aludsparken]#Skogshare]#Aludsparken, Skogshare, Ingladsil, Antarctica]
 

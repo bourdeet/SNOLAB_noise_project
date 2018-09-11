@@ -26,18 +26,9 @@ import subprocess
 
 parser = argparse.ArgumentParser("Combine and plot all results from the SNOLab measurements.")
 
-parser.add_argument('--option',
-                    default='dom',
-                    help="option for ordering: temperature or dom")
-
 parser.add_argument('--name',
                     default='SNOLab_ALL_T_dependent_results.pdf',
                     help="name of the file (incl. pdf extension)")
-
-
-parser.add_argument('--vuvuzela',
-                    help='treat the case of simulated vuvuzela at some DOM',
-                    action='store_true')
 
 parser.add_argument('--rearange',
                     help='rearange the pdf pages',
@@ -60,46 +51,6 @@ pulse_II = "/home/etienne/NBI/SNOLab/scripts/pulse_II.py"
 
 for dom in doms_to_plot:
 
-
-    if args.vuvuzela:
-
-        print "\n"
-        print dom['name'], -dom['T']
-        print "****************************\n"
-
-        temp = dom['T']
-
-        folder = analysis_folder+"/InIce-%s/"%(T['inice'])
-        name_pattern = "*.p"
-        
-        #Check that there is data in the requested folder
-        #--------------------------------------------------
-        list_of_available_files = sorted(glob.glob(folder+name_pattern))
-
-        if len(list_of_available_files)==0:
-            sys.exit("ERROR: No data available for dom %s at %s"%(dom['name'],T))
-        else:
-            print "running pulse_II..."
-            #Launch pulse_II with the correct arguments
-            #-------------------------------------------------
-            arguments = " --input \"%s\" "%(folder+name_pattern)
-            arguments+= "--run 00 "
-            arguments+= "--threshold %f "%dom['0.25pe']
-            arguments+= "--dom %s "%dom['name']
-            arguments+= "--temp %i "%temp
-            arguments+= "--scale %f "%(dom['scale'])
-            arguments+= "--output %s_m%s.pdf "%(dom['name'],temp)
-            arguments+= "--spe %f "%(dom['spe'])
-            arguments+= "--qpair %f "%(dom['qpair'])
-            
-            command = pulse_II+arguments
-
-            print command
-            subprocess.Popen(command,shell=True).wait()
-        
-    else:
-        
-
         for T in ['T10','T20','T30','T40']:
 
             print "\n"
@@ -110,7 +61,7 @@ for dom in doms_to_plot:
 
             folder = analysis_folder+"/"+dom['name']+"/m"+T[1:]+"/pickled/"
             run_number = dom[T]
-            name_pattern = "run%04i_*.p"%(run_number)
+            name_pattern = "FINAL*run%04i_*.p"%(run_number)
         
             #Check that there is data in the requested folder
             #--------------------------------------------------

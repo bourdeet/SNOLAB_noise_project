@@ -66,7 +66,7 @@ def get_hist_stats(H,x,y):
 
 
     
-def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6):
+def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6,withdeadtime=False):
 
     import pickle
     from pulsetools import PMT_DAQ_sequence
@@ -87,6 +87,7 @@ def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6):
     burst_threshold = 1.e-6 # Choosing a timescale much smaller than the thermal one
     bursts_charge_list = []
     bursts_time_list = []
+    deadtime = []
 
     for pickled_file in list_of_files:
 
@@ -96,7 +97,12 @@ def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6):
         if 'header' not in pickled_file:
 
             data = pickle.load(open(pickled_file,"rb"))
-                
+
+            if withdeadtime:
+                #print pickled_file
+                #print data[1]
+                deadtime.append(data[1])
+                data = data[0]
 
             for sequence in data:
                     
@@ -138,10 +144,68 @@ def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6):
                         npulses.append(sum(kept))
                         charge.append(kept_charge)
     
-    return charge,times,deltatees,Q_pair,Q_ratio,livetime,npulses,mode,bursts_charge_list,bursts_time_list
+    return charge,times,deltatees,Q_pair,Q_ratio,livetime,npulses,mode,bursts_charge_list,bursts_time_list,deadtime
+
+
+ # Defining fitting functions
+ #===========================================================================
+ 
+def gaussian(x,A,mu,sigma):
+    return A*1./(sigma)*np.exp(-((x-mu)**2.)/(2.*sigma**2.0))
+
+def multigaus(x,A0,mu0,sigma0,A1,mu1,sigma1):
+
+    npe=2
+    pedestal = A0*(1./(sigma0*np.sqrt(np.pi))*exp(-((x-mu0)**2.)/(2.*sigma0**2.0)))
+    signal   = A1*(1./(sigma1*np.sqrt(np.pi))*exp(-((x-mu1)**2.)/(2.*sigma1**2.0)))
+    return pedestal+signal
+                                
+
+def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
+    
+    bkgd = gaussian(x,mu_ped,s_ped)*exp(-mu_exp)
+
+    signal = 0.0
+    for i in range(0,n_pe_max):
+        signal+=gaussian(x,i*mu_1pe,np.sqrt(s_1pe))*poi(i,mu_exp)
+        
+    return signal+bkgd
+
+
+def poisson(X,expected_rate):
+    
+    dt=[]    
+    for i in range(0,int(livetime/0.05)):
+        n = scipy.random.poisson(expected_rate*0.05)
+        times = scipy.random.uniform(0.,0.05,size=n)
+        x = np.sort(times)
+        dt.append(x[1:]-x[0:-1])
+                        
+    dt = np.hstack(dt)
+    y,_=np.histogram(dt,bins=X)
+    y =np.concatenate([y,np.array([0.0])])
+    
+    return y
 
 
 
+def fit_uncorrelated_rate(poi_x,poi_y,livetime,ax):
+                
+    import scipy.optimize as optimization
+    
+    bestfitparam,cov= optimization.curve_fit(poisson, poi_x,poi_y,500,max_nfev=1000,method='trf',bounds=[100,5000],diff_step=1,verbose=2,ftol=1e-9,xtol=1e-9)
+        
+    print "Best fit rate: ",bestfitparam[0]
+                
+    Yfit = poisson(X,bestfitparam[0])
+        
+    ax.plot(X, Yfit,'r',linewidth=3.0,label='Poisson Fit')
+    ax.text(0.004,1000,'Poisson rate: %f Hz'%bestfitparam[0])
+
+    return ax
+
+
+#===============================================================================
 # Run the code
 #===============================================================================
 
@@ -161,92 +225,67 @@ if __name__=='__main__':
     from matplotlib.colors import LogNorm
     from matplotlib.backends.backend_pdf import PdfPages
 
+
+    # Parse Arguments
+    #=========================================================================
+
     parser = argparse.ArgumentParser(description="pulse II",
                                      formatter_class=RawTextHelpFormatter)
 
-    parser.add_argument('-i', '--input',
-                        dest='INFILE',
-                        help="Input Data (pickle file)",
+    parser.add_argument('-i', '--input',dest='INFILE',help="Input Data (pickle file)",
                         required=True)
-
-    parser.add_argument('--input2',
-                        default=None,
-                        dest='INFILE2',
+    
+    parser.add_argument('--input2', default=None, dest='INFILE2',
                         help="second set of data")
 
-    parser.add_argument('--run',
-                        dest='RUNID',
-                        type=int,
-                        help="number of the run")
+    parser.add_argument('--run',dest='RUNID',type=int, help="number of the run")
 
-    parser.add_argument('--threshold',dest='THRES',
-                        type=float,
+    parser.add_argument('--threshold',dest='THRES', type=float,
                         help="select only pulses above a certain threshold (in pC).",
-                        default=-1000
-    )
+                        default=-1000)
 
-    parser.add_argument('--deadcut',dest='DCUT',
-                        help="Apply the 6 us cut to compute the rate",
-                        action='store_true'
-    ) 
+    parser.add_argument('--deadcut',dest='DCUT', help="Apply the 6 us cut to compute the rate",
+                        action='store_true')
 
-    parser.add_argument('--deadcutII',dest='DCUT2',
-                        help="Apply the 2.45 us cut to compute the rate",
-                        action='store_true'
-    )
-
-
-    parser.add_argument('--debug',dest='DEBUG',
-                        action='store_true'
-    )
+    parser.add_argument('--deadcutII',dest='DCUT2', help="Apply the 2.45 us cut to compute the rate",
+                        action='store_true')
+    parser.add_argument('--debug',dest='DEBUG', action='store_true')
 
     parser.add_argument('--dom',
                         default='',
                         help="DOM name")
 
-    parser.add_argument('--temp',
-                        type=int,
-                        required=True,
-                        help="Temperature")
+    parser.add_argument('--temp',type=int, required=True, help="Temperature")
 
-    parser.add_argument('--scale',
-                        type=float,
-                        default=100,
+    parser.add_argument('--scale',type=float,default=100,
                         help="Fixed scale of the log10dt plot")
 
-    parser.add_argument('--output',
-                        default="noise_pulse_analysis.pdf",
+    parser.add_argument('--output', default="noise_pulse_analysis.pdf",
                         help="name of the output file containing all plots")
 
-    parser.add_argument('--spe',
-                        type=float,
-                        required=True,
+    parser.add_argument('--spe',type=float, required=True,
                         help="location of the SPE peak for the DOM")
-
     
-    parser.add_argument('--qpair',
-                        type=float,
-                        required=True,
+    parser.add_argument('--qpair', type=float, required=True,
                         help="Scale of the Q pairs histograms")
 
-    parser.add_argument('--show-plots',
-                        action = "store_true")
+    parser.add_argument('--show-plots', action = "store_true")
 
     args = parser.parse_args()
 
     debug = args.DEBUG
+    #==============================================================================
+    
+    
 
-
-    # building title for all plots
-    #------------------------------------------------------------------
+    # Preparing a bunch of containers
+    #==============================================================================
+    from plotting_standards import *
+    
     titlename=args.dom+", -%i$^{\circ}$C"%args.temp
-
-    # Burst finder
-    #------------------------------------------------------------------
-
+    
     burst_threshold = 1.e-6 # Choosing a timescale much smaller than the thermal one
-
-
+    
     # Unpack data from the pickle find using pseries parser
     #------------------------------------------------------------------
     
@@ -263,13 +302,19 @@ if __name__=='__main__':
     mode          = data_pack[7]
     bursts_charge = data_pack[8]
     bursts_time   = data_pack[9]
+    deadtime      = data_pack[10]
     
+    print deadtime," DEAD"
 
     # Evaluate / compute quantities extracted from the pulse series
-    #====================================================================
+    #================================================================================
     # Time-series quantities
     charge = np.concatenate(charge)
     Tiiime = np.concatenate(times)
+    if not deadtime:
+        Deads = [0.0]
+    else:
+        Deads  = np.concatenate(deadtime)
 
     # Differential quantities
     time_deltas = np.concatenate(deltatees)
@@ -277,7 +322,7 @@ if __name__=='__main__':
     qratio = np.concatenate(Q_ratio)
 
     # Livetime
-    livetime=sum(livetime)
+    livetime=sum(livetime)-sum(Deads)
     rate = sum(npulses)/livetime
     print "Livetime: ",livetime," s"
     print "npulses :", sum(npulses)
@@ -310,30 +355,26 @@ if __name__=='__main__':
 
 
 
-
     #============================================================================
     # Plotting begins
     #============================================================================
     
     pdf = PdfPages(args.output)
+    font = {'family' : 'serif',
+            'weight' : 'bold',
+            'size'   : 22}
+    matplotlib.rc('font', **font)
 
 
+    
     # 2D histogram of charge v. time of the second pulse w.r.t to its previous one
     #-----------------------------------------------------------------------------
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-    font = {'family' : 'normal',
-            'weight' : 'bold',
-            'size'   : 22}
 
-    matplotlib.rc('font', **font)
-
-    xedges, yedges = np.arange(-8.0,-1.0,0.1), np.arange(-0,10,0.2)
-    H, xedges, yedges = np.histogram2d(np.log10(time_deltas),qpairs/float(args.spe),(xedges,yedges))
-    X, Y = np.meshgrid(xedges,yedges)
+    H,_,_ = np.histogram2d(np.log10(time_deltas),qpairs/float(args.spe),(edges_dt,edges_Q))
+    X, Y = np.meshgrid(edges_dt,edges_Q)
 
     # Get bin centers + add median of columns
-    y_center = yedges[0:-1]+(yedges[1]-yedges[0])/2.0
-    x_center = xedges[0:-1]+(xedges[1]-xedges[0])/2.0
     y_median,y_avg = get_hist_stats(H,x_center,y_center)
     plt.pcolormesh(np.transpose(X), np.transpose(Y), H/float(livetime),vmax=args.qpair)
     plt.plot(x_center,y_median,'k',linewidth=2.,label='median')
@@ -354,20 +395,13 @@ if __name__=='__main__':
     # 2D histogram: charge ratio v. delta-t
     #==============================================================================
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-    font = {'family' : 'normal',
-            'weight' : 'bold',
-            'size'   : 22}
 
-    xedges, yedges = np.arange(-8.0,-1.0,0.1), np.arange(-0,3.0,0.1)
-    H, xedges, yedges = np.histogram2d(np.log10(time_deltas),qratio,(xedges,yedges))
-    X, Y = np.meshgrid(xedges,yedges)
+    H,_,_ = np.histogram2d(np.log10(time_deltas),qratio,(edges_dt,edges_Q))
+    X, Y = np.meshgrid(edges_dt,edges_Q)
 
 
     # Get bin centers + add median of columns
-    y_center = yedges[0:-1]+(yedges[1]-yedges[0])/2.0
-    x_center = xedges[0:-1]+(xedges[1]-xedges[0])/2.0
     y_median,y_avg = get_hist_stats(H,x_center,y_center)
-
     plt.pcolormesh(np.transpose(X), np.transpose(Y), H/livetime,vmax=(args.qpair))
     plt.plot(x_center,y_median,'k',linewidth=2.,label='median')
     plt.plot(x_center,y_avg,'c',linewidth=2.,label='avg')
@@ -386,7 +420,7 @@ if __name__=='__main__':
     # Plot the burst size distribution (number of pulses per bursts)
     #-----------------------------------------------------------------------------
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-    plt.hist(burst_sizes,bins=np.linspace(0.,15,16),color='g')
+    plt.hist(burst_sizes,bins=edges_ppb,color='g')
     plt.title(titlename)
     plt.xlabel("# of pulses per burst")
     plt.yscale('log')
@@ -398,7 +432,7 @@ if __name__=='__main__':
     # Plot the burst durations (length of uninterrupted sequences of pulses
     #-----------------------------------------------------------------------------
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-    plt.hist(burst_durations/1.e-6,bins=np.linspace(0.,4,51))
+    plt.hist(burst_durations/1.e-6,bins=edges_bl)
     plt.title(titlename)
     plt.xlabel("Duration of bursts ($\mu$s)")
     plt.yscale('log')
@@ -410,12 +444,10 @@ if __name__=='__main__':
     # Plot the burst duration profile
     #----------------------------------------------------------------------------
     plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-    print min(burst_durations[burst_durations!=0])
-    print max(burst_durations[burst_durations!=0])
 
-    xedges, yedges = np.arange(2.0,20,1.0), np.arange(0,5,0.1)
-    H, xedges, yedges = np.histogram2d(burst_sizes[burst_durations!=0],burst_durations[burst_durations!=0]/1.e-6,(xedges,yedges))
-    X, Y = np.meshgrid(xedges,yedges)
+
+    H,_,_ = np.histogram2d(burst_sizes[burst_durations!=0],burst_durations[burst_durations!=0]/1.e-6,(edges_ppb,edges_bl))
+    X, Y = np.meshgrid(edges_ppb,edges_bl)
     plt.pcolormesh(np.transpose(X), np.transpose(Y), H/float(livetime),norm=LogNorm(),vmax=1.e4)
     plt.colorbar()
     plt.title(titlename)
@@ -426,190 +458,108 @@ if __name__=='__main__':
         plt.show()
 
 
+   
+    # delta-t histogram
+    #--------------------------------------------------------------------
+    y,X=np.histogram(time_deltas,bins=raw_dt_bins)
+    y =  np.concatenate([y,np.array([0.0])])
+    poi_x= X[(X>0.002)*(X<0.006)]
+    poi_y= y[(X>0.002)*(X<0.006)]
 
 
-
-    # Defining fitting functions
-    def gaussian(x,A,mu,sigma):
-        return A*1./(sigma)*np.exp(-((x-mu)**2.)/(2.*sigma**2.0))
-
-    def multigaus(x,A0,mu0,sigma0,A1,mu1,sigma1):
-
-        npe=2
-        pedestal = A0*(1./(sigma0*np.sqrt(np.pi))*exp(-((x-mu0)**2.)/(2.*sigma0**2.0)))
-        signal   = A1*(1./(sigma1*np.sqrt(np.pi))*exp(-((x-mu1)**2.)/(2.*sigma1**2.0)))
-        return pedestal+signal
-                                
-
-    def SPE(x,mu_ped,s_ped,mu_exp,mu_1pe,s_1pe,n_pe_max=8):
-        
-        bkgd = gaussian(x,mu_ped,s_ped)*exp(-mu_exp)
-
-        signal = 0.0
-        for i in range(0,n_pe_max):
-                signal+=gaussian(x,i*mu_1pe,np.sqrt(s_1pe))*poi(i,mu_exp)
-        
-        return signal+bkgd
-
-
-    def poisson(X,expected_rate):
+    fig = plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+    ax = plt.gca()
+    ax.hist(time_deltas,bins=X,color='b',label='run %04i'%args.RUNID,alpha=0.5)
+    ax.set_title(titlename)
+    ax.set_ylabel("count")
+    ax.set_xlabel("delta-t (s)")
+    ax.set_yscale('log')
     
-        dt=[]    
-        for i in range(0,int(livetime/0.05)):
-            n = scipy.random.poisson(expected_rate*0.05)
-            times = scipy.random.uniform(0.,0.05,size=n)
-            x = np.sort(times)
-            dt.append(x[1:]-x[0:-1])
-                        
-        dt = np.hstack(dt)
-        y,_=np.histogram(dt,bins=X)
-        y =np.concatenate([y,np.array([0.0])])
+    ax = fit_uncorrelated_rate(poi_x,poi_y,livetime,ax=ax)
+    ax.legend()
+    pdf.savefig(fig)
+    if args.show_plots:
+        plt.show()
+
+
+
+    # Charge distribution
+    #----------------------------------------------------------------------------
+    plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+    plt.ylabel("count")
+    plt.xlabel("charge (pC)")
+    plt.title(titlename)
+    #plt.yscale('log')
+        
+    y,x,_=plt.hist(charge/float(args.spe),bins=binning_charge,color='r',label='run %04i'%args.RUNID,alpha=0.5)
+    plt.legend()
+    pdf.savefig() 
+    if args.show_plots:
+        plt.show()
+
+
+    # Log10 delta-t
+    #---------------------------------------------------------------------------
+
+    Log10DT = np.log10(time_deltas)
+    low_dt = sum(Log10DT<=-7.)
+    print "Fraction of hits below 10^-7 s: ",float(low_dt)/len(Log10DT)
+
+
+
+    # Compute Rates after standardized cuts
+    #--------------------------------------------------
+    if args.DCUT:
+        Log10DT = Log10DT[Log10DT>-5.221848]  # 6 us = -5.221848]
+        V=np.array([1/float(len(Log10DT))]*len(Log10DT))
+        rate = len(Log10DT+1)/livetime
+        print "rate: %f Hz"%rate
+    elif args.DCUT2:
+        Log10DT = Log10DT[Log10DT>-5.610833915635467]
+        V=np.array([1/float(len(Log10DT))]*len(Log10DT))
+        rate = len(Log10DT+1)/livetime
+        print "rate: %f Hz"%rate
+                
+    else:
+        rate = sum(npulses)/livetime
+
+
+    plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
+    plt.hist( Log10DT,bins=binning_log10dt,alpha=0.5,label='run %04i'%args.RUNID,color='g',weights=np.ones(len(Log10DT))/float(livetime))
+    plt.xlabel('log10($\Delta t$)')
+    plt.ylabel('Rate (Hz)')
+    plt.title(titlename)
+    axes = plt.gca()
+    axes.set_ylim([0,args.scale])
+    plt.legend(loc='upper left')
+
+    plt.text(-7,0.5,'Rate: %.3f Hz'%(rate))
+    pdf.savefig() 
+    if args.show_plots:
+        plt.show()
+        
+    pdf.close()
+
     
-        return y
-
-
-
-    def fit_uncorrelated_rate(poi_x,poi_y,livetime,bins):
-                
-        import scipy.optimize as optimization
-        
-        bestfitparam,cov= optimization.curve_fit(poisson, poi_x,poi_y,500,max_nfev=1000,method='trf',bounds=[100,6000],diff_step=1,verbose=2,xtol=1e-40)
-        
-        print "Best fit rate: ",bestfitparam[0]
-
-        plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-        plt.title(titlename)
-        plt.ylabel("count")
-        plt.xlabel("delta-t (s)")
-        plt.yscale('log')
-                
-        plt.hist(deltatees,bins=bins,color='b',label='run %04i'%args.RUNID,alpha=0.5)
-                
-        Yfit = poisson(X,bestfitparam[0])
-        
-        plt.plot(X, Yfit,'r',linewidth=3.0,label='Poisson Fit')
-        plt.text(0.007,1000,'Poisson rate: %f Hz'%bestfitparam[0])
-        plt.legend()
-        pdf.savefig() 
-        if args.show_plots:
-            plt.show()
+    """
+    with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
     
+    HS14,_=pickle.load(hitspool)
+    HS14=np.asarray(HS14)
+    #W=np.array([1/float(len(HS14))]*len(HS14))
+    
+    #W = np.array([sum(Log10DT[Log10DT>-6])/sum(HS14)]*len(HS14))
+                
+    #plt.hist(HS14,bins=binning,range=[-8,-1],histtype='step',linewidth=2.0,color='k',label="Hitspool 2014",weights=W)
+    """
 
-    # Plotting
+
+    
+    # Plotting Flasher-specific plots
     #-----------------------------------------------------------------------
 
 
-    if not ('flasher' in mode):
-    
-        times = np.concatenate(times)
-        deltatees = np.concatenate(deltatees)
-        deltatees = deltatees[deltatees>0.]
-        V=np.array([1/float(len(deltatees))]*len(deltatees))
-    
-        # Define the binning for delta-t histogram comparison
-        binning = np.arange(-8.0,-1.0,0.1)
-        binning_charge = np.arange(-5,20,0.2)
-
-
-        # Remove sub-pe pulses from the array
-        if debug:
-            plt.plot(times)
-            plt.show()
-        
-
-        
-        # delta-t histogram
-        #--------------------------------------------------------------------
-        y,X=np.histogram(deltatees,bins=np.linspace(0.,0.01,201))
-
-        y =  np.concatenate([y,np.array([0.0])])
-        
-        poi_x= X[(X>0.004)]
-        poi_y= y[(X>0.004)]
-
-
-        fit_uncorrelated_rate(poi_x,poi_y,livetime,X)
-
-
-
-        
-        # Charge distribution
-        #----------------------------------------------------------------------------
-        plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-        plt.ylabel("count")
-        plt.xlabel("charge (pC)")
-        plt.title(titlename)
-        #plt.yscale('log')
-        
-        y,x,_=plt.hist(charge,bins=binning_charge,color='g',label='run %04i'%args.RUNID,alpha=0.5)
-        plt.legend()
-        pdf.savefig() 
-        if args.show_plots:
-            plt.show()
-        
-        dx = (x[1:]-x[0:-1])[0]
-        x = x+dx/2
-
-        
-        # Log10(delta-t)
-    
-        Log10DT = np.log10(deltatees)
-        low_dt = sum(Log10DT<=-7.)
-        print "Fraction of hits below 10^-7 s: ",float(low_dt)/len(Log10DT)
-    
-
-
-        
-        if args.DCUT:
-            Log10DT = Log10DT[Log10DT>-5.221848]  # 6 us = -5.221848]
-            V=np.array([1/float(len(Log10DT))]*len(Log10DT))
-            rate = len(Log10DT+1)/livetime
-            print "rate: %f Hz"%rate
-        elif args.DCUT2:
-            Log10DT = Log10DT[Log10DT>-5.610833915635467]
-            V=np.array([1/float(len(Log10DT))]*len(Log10DT))
-            rate = len(Log10DT+1)/livetime
-            print "rate: %f Hz"%rate
-                
-        else:
-            rate = sum(npulses)/livetime
-
-        """
-        with open("../analysis_data/Hitspool_2014_2017_dom05-05_example.p","rb") as hitspool:
-
-        HS14,_=pickle.load(hitspool)
-        HS14=np.asarray(HS14)
-        #W=np.array([1/float(len(HS14))]*len(HS14))
-        
-        #W = np.array([sum(Log10DT[Log10DT>-6])/sum(HS14)]*len(HS14))
-                
-        #plt.hist(HS14,bins=binning,range=[-8,-1],histtype='step',linewidth=2.0,color='k',label="Hitspool 2014",weights=W)
-        """
-        
-
-        plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
-        plt.hist( Log10DT,bins=binning,alpha=0.5,label='run %04i'%args.RUNID,color='g',weights=np.ones(len(Log10DT))/float(livetime))
-        plt.xlabel('log10($\Delta t$)')
-        plt.ylabel('Rate (Hz)')
-        plt.title(titlename)
-        axes = plt.gca()
-        axes.set_ylim([0,args.scale])
-        plt.legend(loc='upper left')
-
-
-        plt.text(-7,0.06,'Rate: %.3f Hz'%(rate))
-        pdf.savefig() 
-        if args.show_plots:
-            plt.show()
-    
-
-
-
-
-        #================       Flasher run case ===================
-        #-----------------------------------------------------------
-
-    else:
+    if ('flasher' in mode):
 
         print "This is flasher data"
         binning_charge = np.arange(-1,300,5)
@@ -674,6 +624,3 @@ if __name__=='__main__':
 
         if args.show_plots:
             plt.show()
-
-
-    pdf.close()

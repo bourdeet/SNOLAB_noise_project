@@ -243,9 +243,10 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
     return -np.array(Q),np.array(t)*timeint
 
 
-def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=False,n=0):
+def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=False,n=0):
 
-    print Nsample
+    #*****NOTE: The code in its current version deals badly with pulses that are clipped
+    #           at the end of a trace.
 
     #***************  This code assumes a negative pulse convention  ***************
 
@@ -289,7 +290,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
     median = np.median(pedestal)
     ped_sigma = np.std(pedestal)
 
-    """
+    
     if debug==True:
 
         from scipy.optimize import curve_fit
@@ -303,8 +304,8 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
         
         plt.hist(pedestal,bins=25)
         plt.plot(bin_centres,hist_fit,'r')
-        plt.plot([coeff[1]-4*coeff[2],coeff[1]-4*coeff[2]],[0.,2000000],'g',linewidth=2.)
-        plt.plot([coeff[1]+4*coeff[2],coeff[1]+4*coeff[2]],[0.,2000000],'g',linewidth=2.)
+        plt.plot([coeff[1]-4*coeff[2],coeff[1]-4*coeff[2]],[0.,2000],'g',linewidth=2.)
+        plt.plot([coeff[1]+4*coeff[2],coeff[1]+4*coeff[2]],[0.,2000],'g',linewidth=2.)
         #plt.yscale('log')
         plt.title("value of the non-signal")
 
@@ -313,15 +314,15 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
         print "\n\n***********************\n\n\n"
         plt.show()
         #sys.exit()
-    """
+    
 
     pedestal = np.median(pedestal)
     signal = signal-pedestal*(signal_mask)
     
-    #if debug==True:
-    #    plt.plot(time,signal,'orange')#[0:10000],signal[0:10000],'orange')
-    #    plt.title('data below threshold, minus pedestal')
-    #    plt.show()
+    if debug==True:
+        plt.plot(time,signal,'orange')#[0:10000],signal[0:10000],'orange')
+        plt.title('data below threshold, minus pedestal')
+        plt.show()
 
     # Clean signal mask
     #--------------------------------------------------------------------
@@ -358,12 +359,12 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
 
     selected_pulse[pt]=True
 
-    #if debug==True:
-        #plt.plot(time,Y,'r')
-        #plt.plot(time,-0.005*selected_pulse[1:-1])
-        #plt.plot(time,Y*selected_pulse[1:-1],'go')
-        #plt.title("Pulses selected")
-        #plt.show()
+    if debug==True:
+        plt.plot(time,Y,'r')
+        plt.plot(time,-0.005*selected_pulse[1:-1])
+        plt.plot(time,Y*selected_pulse[1:-1],'go')
+        plt.title("Pulses selected")
+        plt.show()
 
             
     # Now, selected_pulse is the cleaned signal mask that only
@@ -376,7 +377,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=5,debug=Fa
     print sample_res_ns,impedance
     #print start+1
 
-    # print all pulses infividually
+    # print all pulses individually
     # Save them in a file if need be (for pulse shape averaging)
     if debug==True:
         max_samp = 20

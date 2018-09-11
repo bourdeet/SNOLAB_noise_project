@@ -70,6 +70,7 @@ else:
                                 submitfile=bash_directory+"run%04i_submit_%i.sh"%(args.RUNID,ntotal/nfiles_per_job)
                                 subfile= open(submitfile,"w")
                                 subfile.write("#!/bin/bash\n")
+                                subfile.write("#SBATCH mem-per-cpu=5G")
 
                         Launch_code=execution_directory+"pulse_analyzer.py -i %s -o %s/%srun%04i.p --pulse_width %i -t %f \n "%(input_directory+trcfile,output_directory,args.OUTNAME,args.RUNID,args.PWIDTH,args.THRESH)
 
@@ -79,7 +80,7 @@ else:
                                 subfile.close()
                                 executive_order="chmod +x %s"%(submitfile)
                                 subprocess.Popen(executive_order.split())
-                                launch_command="sbatch -p icecube %s  --mem-per-cpu=5G"%(submitfile)
+                                launch_command="sbatch -p icecube %s  "%(submitfile)
                                 print launch_command
                                 subprocess.Popen(launch_command.split())
         
