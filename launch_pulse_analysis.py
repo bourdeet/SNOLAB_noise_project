@@ -49,6 +49,9 @@ output_directory=input_directory+"/pickled/"
 
 bash_directory=input_directory+"/job_submit/"
 
+if not os.path.exists(bash_directory):
+    os.makedirs(bash_directory)
+
 execution_directory = "/groups/icecube/bourdeet/SNOLAB/scripts/"
 
 
