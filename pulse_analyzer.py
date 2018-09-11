@@ -225,3 +225,4 @@ def mainprogram():
                         
 if __name__=='__main__':
         mainprogram()
+        print "***************PROGRAM COMPLETED. GOOD DAY!**********************"
