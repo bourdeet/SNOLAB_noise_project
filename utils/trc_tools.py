@@ -63,7 +63,7 @@ def parse_header_trc(trcformat,debug):
         return header_container
 
 
-def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False,debug=False,Nsample = 10,n=0):
+def load_data_trc(inputname,threshold,interval=[20,40],asSeq=False,asFlash=False,debug=False,Nsample=5,n=0):
         
         #********** Raw data show negative pulses ********
 
