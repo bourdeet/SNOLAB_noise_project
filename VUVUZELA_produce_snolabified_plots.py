@@ -40,7 +40,11 @@ if __name__=='__main__':
     parser.add_argument('--show-plots',
                         action = "store_true")
 
+    parser.add_argument('--targets',
+                        help="library of vuvuzela DOMs to compute",
+                        default = "vuvuzela_doms")
 
+    
     args = parser.parse_args()
     debug = args.DEBUG
 
@@ -50,7 +54,7 @@ if __name__=='__main__':
 
     # Load the plotting attributes of the IceCube doms
     #========================================================================
-    from vuvuzela_doms import *
+    exec("from %s import *"%(args.targets))
     from pulse_II import parse_pseries,get_hist_stats
     from plotting_standards import *
     
@@ -70,7 +74,7 @@ if __name__=='__main__':
             titlename="%s (%s), -%i$^{\circ}$C"%(dom['name'],dom['inice'],dom['T'])
             print "\n",titlename
         
-            folder = "../analysis_data/March18/InIce-%s"%dom['inice']
+            folder = "../analysis_data/March18/target_doms_m30/InIce-%s"%dom['inice']
         
             combined_results[dom['name']]= {}
             combined_results[dom['name']]['title'] = titlename
@@ -221,7 +225,7 @@ if __name__=='__main__':
     #
     #==============================================================================
     
-    for i in range(0,9):
+    for i in range(0,10):
 
         ID = doms_to_plot[i]['name']
 

@@ -26,10 +26,6 @@ import subprocess
 
 parser = argparse.ArgumentParser("Combine and plot all results from the SNOLab measurements.")
 
-parser.add_argument('--name',
-                    default='SNOLab_ALL_T_dependent_results.pdf',
-                    help="name of the file (incl. pdf extension)")
-
 parser.add_argument('--rearange',
                     help='rearange the pdf pages',
                     default=True)
@@ -85,7 +81,7 @@ for dom in doms_to_plot:
             
                 command = pulse_II+arguments
 
-                print command
+                #print command
                 subprocess.Popen(command,shell=True).wait()
 
             

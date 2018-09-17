@@ -48,5 +48,5 @@ Antarctica = {'name':'Antarctica',
               'qpair':7.
                }
 
-doms_to_plot = [Aludsparken]#Skogshare]#Aludsparken, Skogshare, Ingladsil, Antarctica]
+doms_to_plot = [Aludsparken, Skogshare, Ingladsil, Antarctica]
 

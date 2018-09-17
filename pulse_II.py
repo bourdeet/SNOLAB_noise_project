@@ -57,9 +57,12 @@ def get_hist_stats(H,x,y):
             data.append(np.repeat(y[j],histogram[j]))
 
         data = np.hstack(data)
-
-        median.append(np.median(data))
-        avg.append(np.mean(data))
+        if len(data)==0:
+            median.append(0.0)
+            avg.append(0.0)
+        else:
+            median.append(np.median(data))
+            avg.append(np.mean(data))
         
     return median,avg
 
@@ -187,20 +190,121 @@ def poisson(X,expected_rate):
     
     return y
 
+def delta_t_exponential(x,lamb,A):
+    return A*np.exp(-lamb*x)
 
+def delta_t_residuals(params,x,y):
+    lamb=params[0]
+    A = params[1]
 
-def fit_uncorrelated_rate(poi_x,poi_y,livetime,ax):
-                
-    import scipy.optimize as optimization
+    return (y- delta_t_exponential(x,lamb,A))
+
+def delta_t_chi2(params,x,y,sigma):    
+    if len(sigma)!=len(y): sys.exit("ERROR: sigma and y must have the same length")
+
+    chi2=(delta_t_residuals(params,x,y)/sigma)**2.
     
-    bestfitparam,cov= optimization.curve_fit(poisson, poi_x,poi_y,500,max_nfev=1000,method='trf',bounds=[100,5000],diff_step=1,verbose=2,ftol=1e-9,xtol=1e-9)
+    return sum(chi2)
+
+
+def fit_uncorrelated_rate(poi_x,poi_y,sigma=None,ax=None):
+
+    # Fit directly an exponential instead of making a distribution
+    import scipy.optimize as optimization
+    from scipy.optimize import least_squares
+    from scipy.optimize import leastsq
+    from scipy.optimize import minimize
+
+    
+    font_text = {'family': 'serif',
+                 'weight': 'normal',
+                 'size': 16,
+    }
+    
+    x0 = np.array([500.,poi_y[0]])
+
+    #Least square residuals
+    res_lsq = least_squares(delta_t_residuals, x0=x0, args=(poi_x,poi_y),
+                            loss='linear',
+                            max_nfev=1000,ftol=1e-11,xtol=1e-11,gtol=-11)
+                            
+    bestfitparams = res_lsq.x
+    residuals = res_lsq.fun
+    matrix =  np.dot(res_lsq.jac.T,res_lsq.jac)
+    covariance = np.linalg.inv(matrix)
+    uncertainty =  np.sqrt(covariance*sum(residuals**2.)/float(len(poi_x)-2))
+    
+    print "Least squares:\t\t ",bestfitparams[0],bestfitparams[1]
+    
+    # chi2-minimization
+    if not (sigma is None):
+
+        chi2_result = minimize(delta_t_chi2,x0=x0,args=(poi_x,poi_y,sigma),
+                               method='Nelder-Mead',
+                               options={'xatol':1e-9})
         
-    print "Best fit rate: ",bestfitparam[0]
-                
-    Yfit = poisson(X,bestfitparam[0])
         
-    ax.plot(X, Yfit,'r',linewidth=3.0,label='Poisson Fit')
-    ax.text(0.004,1000,'Poisson rate: %f Hz'%bestfitparam[0])
+        best_fit_lamb = chi2_result.x[0]
+        best_fit_A = chi2_result.x[1]
+
+        
+        chi2_opt     = chi2_result.fun
+        ndof = float(len(y)-2)
+        print "Best-fit chi2 min:\t ",best_fit_lamb,best_fit_A
+        print "\nResiduals:\t", np.var(residuals)
+        print "Reduced Chi square:\t", chi2_opt/ndof
+
+        
+        Yfit2 = delta_t_exponential(poi_x,best_fit_lamb,best_fit_A)
+        ax.plot(poi_x, Yfit2,'g',linewidth=1.0,label='Chi2')
+
+    # Chi2 scan around best-fit point
+    Chi2_scan=[]
+    Resi_scan=[]
+    L = np.linspace(best_fit_lamb-0.01*best_fit_lamb,1200,1001)
+    A = np.linspace(best_fit_A-best_fit_A,100,101)
+    for l in L:
+        for a in A:
+            Chi2 = delta_t_chi2([l,a],poi_x,poi_y,sigma)
+            resi = delta_t_residuals([l,a],poi_x,poi_y)
+            Chi2_scan.append(Chi2)
+            Resi_scan.append(sum(resi))
+    
+    L = np.array(L)
+    Chi2_scan = np.array(Chi2_scan)
+    Chi2_scan = np.reshape(Chi2_scan,[1001,101])
+    Resi_scan = np.array(Resi_scan)
+    Resi_scan = np.reshape(Resi_scan,[1001,101])
+
+
+
+
+
+    Yfit = delta_t_exponential(poi_x,bestfitparams[0],bestfitparams[1])
+        
+    ax.plot(poi_x, Yfit,'r',linewidth=3.0,label='least squares')
+    ax.text(0.6,0.5,r'Poisson rate: %.0f $\pm$ %.0f Hz'%( bestfitparams[0],uncertainty[0,0]),
+            transform=ax.transAxes,
+            fontdict=font_text)
+
+    """
+    import matplotlib
+    import matplotlib.pyplot as plt
+    plt.show()
+    X,Y = np.meshgrid(A,L)
+    plt.pcolormesh(X,Y,Chi2_scan)
+    plt.xlabel("A")
+    plt.ylabel("rate")
+    plt.colorbar()
+    plt.show()
+    
+    X,Y = np.meshgrid(A,L)
+    plt.pcolormesh(X,Y,Resi_scan)
+    plt.xlabel("A")
+    plt.ylabel("rate")
+    plt.colorbar()
+    plt.show()
+    """
 
     return ax
 
@@ -304,7 +408,6 @@ if __name__=='__main__':
     bursts_time   = data_pack[9]
     deadtime      = data_pack[10]
     
-    print deadtime," DEAD"
 
     # Evaluate / compute quantities extracted from the pulse series
     #================================================================================
@@ -324,9 +427,9 @@ if __name__=='__main__':
     # Livetime
     livetime=sum(livetime)-sum(Deads)
     rate = sum(npulses)/livetime
-    print "Livetime: ",livetime," s"
-    print "npulses :", sum(npulses)
-    print "rate: ",rate," Hz"
+    #print "Livetime: ",livetime," s"
+    #print "npulses :", sum(npulses)
+    #print "rate: ",rate," Hz"
 
     # Burst data
     bc_array  = bursts_charge # these are lists of arrays. One array = one burst
@@ -349,7 +452,7 @@ if __name__=='__main__':
     burst_deltatees =   np.array(burst_deltatees)
     burst_sizes = np.array(burst_sizes)
     burst_durations = np.array(burst_durations)
-    print "Average burst size = ",sum(burst_sizes)/float(len(burst_sizes))
+    #print "Average burst size = ",sum(burst_sizes)/float(len(burst_sizes))
 
 
 
@@ -462,20 +565,41 @@ if __name__=='__main__':
     # delta-t histogram
     #--------------------------------------------------------------------
     y,X=np.histogram(time_deltas,bins=raw_dt_bins)
-    y =  np.concatenate([y,np.array([0.0])])
-    poi_x= X[(X>0.002)*(X<0.006)]
-    poi_y= y[(X>0.002)*(X<0.006)]
+
+    # counts are normalized to rates (in Hz)
+    y = y/float(livetime)
+
+    # statistical uncertainties per bin
+    sigma = np.ones(len(y))
+    for i in range(0,len(y)):
+        if y[i]!=0:
+            sigma[i]=1./np.sqrt(y[i])/float(livetime)
+
+    # Take the center of the bins
+    dx = (X[1]-X[0])/2.
+    x_center = X[:-1]+dx
+
+    # Select a subset of data to fit the thermal component
+    poi_x= x_center[(x_center>0.003)]
+    poi_y= y[(x_center>0.003)]
+    sigma = sigma[(x_center>0.003)]
 
 
     fig = plt.figure(num=None, figsize=(15, 10), dpi=80, facecolor='w', edgecolor='k')
     ax = plt.gca()
-    ax.hist(time_deltas,bins=X,color='b',label='run %04i'%args.RUNID,alpha=0.5)
+    
+    ax.hist(time_deltas,bins=X,color='b',label='run %04i'%args.RUNID,alpha=0.5,
+            weights = np.ones(len(time_deltas))/float(livetime))
+    ax.errorbar(poi_x,poi_y,yerr=sigma,fmt='sk')
     ax.set_title(titlename)
-    ax.set_ylabel("count")
+    ax.set_ylabel("Rate(Hz)")
     ax.set_xlabel("delta-t (s)")
     ax.set_yscale('log')
-    
-    ax = fit_uncorrelated_rate(poi_x,poi_y,livetime,ax=ax)
+
+
+    # Make the fit
+    #-----------------------------------------------------------------------
+    ax = fit_uncorrelated_rate(poi_x,poi_y,sigma=sigma,ax=ax)
     ax.legend()
     pdf.savefig(fig)
     if args.show_plots:
@@ -503,7 +627,7 @@ if __name__=='__main__':
 
     Log10DT = np.log10(time_deltas)
     low_dt = sum(Log10DT<=-7.)
-    print "Fraction of hits below 10^-7 s: ",float(low_dt)/len(Log10DT)
+    #print "Fraction of hits below 10^-7 s: ",float(low_dt)/len(Log10DT)
 
 
 
