@@ -13,7 +13,7 @@ dom_targets.append(OMKey(39,57))
 dom_targets.append(OMKey(39,58))
 dom_targets.append(OMKey(39,59))
 
-doms_to_plot.append( {'name':"S32-D57",'T':-9.650000,'inice': "32-57",'scale': 150,'spe': 75000,'qpair': 5})
+#doms_to_plot.append( {'name':"S32-D57",'T':-9.650000,'inice': "32-57",'scale': 150,'spe': 75000,'qpair': 5})
 dom_targets.append(OMKey(32,55))
 dom_targets.append(OMKey(32,56))
 dom_targets.append(OMKey(32,57))

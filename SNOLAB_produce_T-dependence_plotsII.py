@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python
 
 
@@ -47,6 +48,10 @@ if __name__=='__main__':
                         action = "store_true")
 
 
+    parser.add_argument('--highdt',
+                        help='ctoff value for the high-dt computation.',
+                        default='-4')
+    
     args = parser.parse_args()
     debug = args.DEBUG
 
@@ -58,7 +63,7 @@ if __name__=='__main__':
     # Load the plotting attributes of the IceCube doms
     #========================================================================
     from lab_doms import *
-    from pulse_II import parse_pseries,get_hist_stats
+    from pulse_II import parse_pseries,get_hist_stats,fit_uncorrelated_rate
     from plotting_standards import *
 
     
@@ -81,7 +86,7 @@ if __name__=='__main__':
         # Call the pulse_series parser
         #====================================================================
         
-        list_of_files = sorted(glob.glob(folder+"/FINAL*.p"))
+        list_of_files = sorted(glob.glob(folder+"/*.p"))
         pserie_results = parse_pseries(list_of_files,pulse_threshold=pthreshold,burst_thresh=1.e-6)
     
         charge    = pserie_results[0]
@@ -184,8 +189,25 @@ if __name__=='__main__':
         combined_results[dom['name']]['burst_duration'] = burst_durations/1.e-6
 
         # Raw deltatee
-        H6,_=np.histogram(time_deltas,bins=raw_dt_bins)
+        H6,X6=np.histogram(time_deltas,bins=raw_dt_bins)
         combined_results[dom['name']]['delta_t'] = time_deltas
+        combined_results[dom['name']]['delta_t_bins'] = X6
+        # statistical uncertainties per bin
+        sigma = np.ones(len(H6))
+        for i in range(0,len(H6)):
+            if H6[i]!=0:
+                sigma[i]=1./np.sqrt(H6[i])
+
+        # Take the center of the bins
+        dx6 = (X6[1]-X6[0])/2.
+        x_center6 = X6[:-1]+dx6
+
+        # Select a subset of data to fit the thermal component
+        combined_results[dom['name']]['poi_x']= x_center6[(x_center6>0.003)]
+        combined_results[dom['name']]['poi_y']= H6[(x_center6>0.003)]
+        combined_results[dom['name']]['sigma'] = sigma[(x_center6>0.003)]
+
+        
 
         # Charge distribution
         H7,_=np.histogram(charge/float(dom['spe']),bins=binning_charge)
@@ -214,7 +236,7 @@ if __name__=='__main__':
         lower_bound = np.log10(50.e-9)
         upper_bound = -6.2
         
-        normal_data_start = -4.0
+        normal_data_start = float(args.highdt)
         normal_data_count = sum(Dt>=normal_data_start)
         
         count_below = sum(Dt<=upper_bound)-sum(Dt<=lower_bound)
@@ -226,13 +248,13 @@ if __name__=='__main__':
         
         print "\n############################"
         print "\n",ID,"\n"
-        print "count_below: ",count_below
-        print "total count: ",count_total
-        print "count unaffected by deadtime: ",normal_data_count
-        print "livetime: ",livt
-        print "Ratio: ",ratio_lowdt
-        print "error: ",error
-        print "############################\n"
+        #print "count_below: ",count_below
+        #print "total count: ",count_total
+        print "count thermal: ",normal_data_count
+        #print "livetime: ",livt
+        #print "Ratio: ",ratio_lowdt
+        #print "error: ",error
+        #print "############################\n"
     
 
     #========================================================================================
@@ -428,6 +450,49 @@ if __name__=='__main__':
         Ax[i].yaxis.set_label_coords(-0.07,0.5)
         
     pdf.savefig()
+
+
+
+    
+    # Simple delta-t distribution with thermal rate fit
+    #======================================================================
+    S = 1 # number of columns per plot
+    gs = gridspec.GridSpec(n_x,n_x*S,wspace=0.1,hspace=0.4)
+    f = plt.figure(figsize=(15,10))
+
+    print "Creating delta-t plots with thermal rate fit..."
+    
+
+    Ax = [None]*n_x*n_y
+    for i in range(0,n_x*n_y):
+        
+        Ax[i] = plt.subplot(gs[i/n_x,(i%n_y*S):(i%n_y*S)+S])
+
+        ID = doms_to_plot[i]['name']
+        dom_data =  combined_results[ID]
+        LVT = dom_data['livetime']
+
+        poi_x = dom_data['poi_x']
+        poi_y = dom_data['poi_y']/float(LVT)
+        sigma = dom_data['sigma']/float(LVT)
+        B = dom_data['delta_t_bins']
+
+        Ax[i].hist(dom_data['delta_t'],bins=B,color='b',label='data',alpha=0.5,
+                   weights = np.ones(len(dom_data['delta_t']))/float(LVT))
+        
+        Ax[i].errorbar(poi_x,poi_y,yerr=sigma,fmt='sk')
+        Ax[i].set_title(dom_data['title'])
+        Ax[i].set_ylabel("Rate(Hz)")
+        Ax[i].set_xlabel("delta-t (s)")
+        Ax[i].set_yscale('log')
+        Ax[i].yaxis.set_label_coords(-0.07,0.5)
+
+        
+        Ax[i] = fit_uncorrelated_rate(poi_x,poi_y,sigma=sigma,ax=Ax[i])
+        Ax[i].legend()
+        
+    pdf.savefig()
+    
 
      # 1D charge distribution
     #======================================================================

@@ -21,7 +21,7 @@ Aludsparken = {'name':'Aluddsparken',
 Skogshare = {'name':'Skogshare',
              'T10':136,
              'T20':129,
-             'T30':124,
+             'T30':124,# 124 is a bad comparison because the files are only 20 ms long (use 120 for thermal rates?)
              'T40':143,
              'scale':150,
              'spe':0.81,
@@ -39,8 +39,8 @@ Ingladsil = {'name':'Ingladsil',
              }
 
 Antarctica = {'name':'Antarctica',
-              'T10':134,
-              'T20':128,
+              'T10':135,# 134 has a livetime of 20 ms
+              'T20':128,#
               'T30':123,
               'T40':141,
               'scale': 100,

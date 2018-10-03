@@ -238,7 +238,7 @@ if __name__=='__main__':
         lower_bound = np.log10(50.e-9)
         upper_bound = -6.2
 
-        normal_data_start = -4.0
+        normal_data_start = -2.5
         normal_data_count = sum(Dt>=normal_data_start)
         
         one_percent  = np.percentile(dead,1)
@@ -251,19 +251,20 @@ if __name__=='__main__':
         
         error = 1./np.sqrt(count_below)
         
-        print "\n############################"
-        print "\n",ID,"\n"
-        print "count in the ROI: ",count_below
-        print "total count: ",count_total
-        print "count unaffected by deadtime: ",normal_data_count
-        print "livetime: ",livt
-        print "one_percent: ",one_percent
-        print "99_percent: ",ninety9_percent
-        print "statistical error: ",error
-        print "deatime contamination: ",deadcontam
-        print "total deadtime: ",len(dead[dead>lower_bound])
-        print "############################\n"
-    
+        #print "\n############################"
+        print ID,"\t",normal_data_count
+        #print "count in the ROI: ",count_below
+        #print "total count: ",count_total
+        #print "count unaffected by deadtime: ",normal_data_count
+        #print "livetime: ",livt
+        #print "one_percent: ",one_percent
+        #print "99_percent: ",ninety9_percent
+        #print "statistical error: ",error
+        #print "deatime contamination: ",deadcontam
+        #print "total deadtime: ",len(dead[dead>lower_bound])
+        #print "############################\n"
+
+    sys.exit()
     #========================================================================================
     #-----------------------------------------------------------------------------
     # Plotting begins

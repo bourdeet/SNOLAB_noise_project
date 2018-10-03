@@ -218,7 +218,7 @@ def fit_uncorrelated_rate(poi_x,poi_y,sigma=None,ax=None):
     
     font_text = {'family': 'serif',
                  'weight': 'normal',
-                 'size': 16,
+                 'size': 13,
     }
     
     x0 = np.array([500.,poi_y[0]])
@@ -249,7 +249,7 @@ def fit_uncorrelated_rate(poi_x,poi_y,sigma=None,ax=None):
 
         
         chi2_opt     = chi2_result.fun
-        ndof = float(len(y)-2)
+        ndof = float(len(poi_y)-2)
         print "Best-fit chi2 min:\t ",best_fit_lamb,best_fit_A
         print "\nResiduals:\t", np.var(residuals)
         print "Reduced Chi square:\t", chi2_opt/ndof
@@ -282,8 +282,8 @@ def fit_uncorrelated_rate(poi_x,poi_y,sigma=None,ax=None):
 
     Yfit = delta_t_exponential(poi_x,bestfitparams[0],bestfitparams[1])
         
-    ax.plot(poi_x, Yfit,'r',linewidth=3.0,label='least squares')
-    ax.text(0.6,0.5,r'Poisson rate: %.0f $\pm$ %.0f Hz'%( bestfitparams[0],uncertainty[0,0]),
+    ax.plot(poi_x, Yfit,'r',linewidth=2.0,label='least squares')
+    ax.text(0.5,0.5,r'Poisson rate: %.0f $\pm$ %.0f Hz'%( bestfitparams[0],uncertainty[0,0]),
             transform=ax.transAxes,
             fontdict=font_text)
 
