@@ -272,7 +272,10 @@ def osc_acquire(scope,params):
 
     # Option 2: Directly dump raw binary into file
     binfile=open(filename+"_0000.bin","wb")
-    
+
+    ###########################################
+    # THIS IS THE READOUT SECTION OF THE CODE
+    ###########################################
     while i<=params.nacq:
         scope.write("acquire:state run")
         #data.append(scope.query_binary_values("wavfrm?",datatype='B',is_big_endian=False))
