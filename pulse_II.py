@@ -12,9 +12,8 @@
 #
 #######################################################
 
-import sys
-sys.path.append("./utils/")
 import numpy as np
+from collections import OrderedDict
 
 # Define some functions
 #============================================================
@@ -72,7 +71,6 @@ def get_hist_stats(H,x,y):
 def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6,withdeadtime=False):
 
     import pickle
-    from pulsetools import PMT_DAQ_sequence
 
     # Load data containers
     #------------------------------------------------------------------
@@ -125,14 +123,13 @@ def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6,withdea
                 if isinstance(sequence,list):
                     sequence=sequence[0]
 
-                if isinstance(sequence,PMT_DAQ_sequence):
+                if isinstance(sequence, OrderedDict):
                     
                     if sequence['npulses']>=1:
                                     
-                        charge_array=np.array(sequence['charge'])                
+                        charge_array=np.array(sequence['charge'])
                         kept = charge_array>pulse_threshold
                         kept_charge = charge_array[kept]
-
 
                         if 'flasher' not in sequence['mode']:
                             
@@ -147,7 +144,7 @@ def parse_pseries(list_of_files,pulse_threshold=-1000,burst_thresh=1.e-6,withdea
                         npulses.append(sum(kept))
                         charge.append(kept_charge)
     
-    return charge,times,deltatees,Q_pair,Q_ratio,livetime,npulses,mode,bursts_charge_list,bursts_time_list,deadtime
+    return charge, times, deltatees, Q_pair, Q_ratio, livetime, npulses, mode, bursts_charge_list, bursts_time_list, deadtime
 
 
  # Defining fitting functions
@@ -316,7 +313,7 @@ def fit_uncorrelated_rate(poi_x,poi_y,sigma=None,ax=None):
 if __name__=='__main__':
 
     import matplotlib
-    from pulsetools import *
+    #from pulsetools import * commenting out because this must be replaced eventually
     import pickle
     import numpy as np
     import matplotlib.pyplot as plt

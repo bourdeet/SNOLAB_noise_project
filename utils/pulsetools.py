@@ -11,10 +11,11 @@
 #######################################################
 import argparse
 from argparse import RawTextHelpFormatter
+
 import numpy as np
 import pickle
 import sys
-import matplotlib.pyplot as plt
+
 import glob
 import struct
 import os
@@ -220,7 +221,6 @@ def find_pulses_in_that_shit(header,data,threshold=0.1,Inverted=False,debug=Fals
             ispulsevec.append(0)
     
     if debug:
-
         time_location=np.zeros(len(header.time['vec']))
         time_location[t]=bound
 
@@ -292,7 +292,6 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
 
     
     if debug==True:
-
         from scipy.optimize import curve_fit
 
         hist, bin_edges = np.histogram(pedestal,bins=25)
@@ -440,7 +439,6 @@ def find_pulses_flasherrun(X,Y,D,interval=[20,40],threshold=50.0,debug=False):
         background = Y[~mask]
 
         if debug:
-                
                 plt.hist(background,bins=20)
                 plt.title('Pedestal distribution')
                 ax = plt.gca()
@@ -463,7 +461,6 @@ def find_pulses_flasherrun(X,Y,D,interval=[20,40],threshold=50.0,debug=False):
         signal = (signal-pedestal)*mask
 
         if debug:
-                
                 plt.plot(X2[0:5000],signal[0:5000],color='red')
                 plt.plot([0,trace_length],[0,0],'k',linewidth=2.0)
                 plt.title('pedestal-subtracted signal (stacked)')
