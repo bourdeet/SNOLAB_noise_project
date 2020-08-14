@@ -371,7 +371,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     # of N samples
 
 
-    pulses = np.split(signal*selected_pulse*sample_res_ns/impedance*1000,start+1)
+    pulses = np.split(signal*selected_pulse,start+1)
 
     print sample_res_ns,impedance
     #print start+1
@@ -400,7 +400,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
                         
 
 
-    charge = np.array([sum(x) for x in pulses])
+    charge = np.array([sum(x*sample_res_ns/impedance*1000) for x in pulses])
     charge = charge[charge!=0]
     
     # The pulse time tag is defined as the sample time of the first

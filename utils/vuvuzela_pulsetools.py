@@ -22,6 +22,9 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     slightly modified version of the pulse finder that does not use impedance info
 
     '''
+    if debug:
+        print('debug mode: importing matplotlib in live mode')
+        import matplotlib.pyplot as plt
 
     
     #***************  This code assumes a negative pulse convention  ***************
@@ -38,12 +41,17 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     # Acquire information from the header:
     sample_res_ns = D['HORIZ_INTERVAL']/1e-9
     impedance = float(D['VERT_COUPLING'].split('_')[1])
-    #print "vertical: ",D['VERTUNIT']
+
     
     if debug:
-        plt.plot(time,Y,'r')#[0:10000],Y[0:10000],'r')
-        plt.title('data, adjusted timing')
+        print("vertical: ", D['VERTUNIT'])
+        print("impedance: ", impedance)
+        print('sample_resolution: ', sample_res_ns, 'ns')
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.plot(time,Y,'r')
+        ax.set_title('data, adjusted timing')
         plt.show()
+        plt.close('all')
         
 
     # Select data below threshold (must be done BEFORE removing pedestal)
@@ -54,10 +62,12 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
 
         
     if debug:
-        plt.plot(time,signal,'r')#[0:10000],signal[0:10000],'r')
-        plt.plot(time,signal,'bo')
-        plt.title('data below threshold')
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.plot(time,signal,'r')#[0:10000],signal[0:10000],'r')
+        ax.plot(time,signal,'bo')
+        ax.set_title('data below threshold')
         plt.show()
+        plt.close('all')
 
                 
     # Compute and subtract pedestal
@@ -72,34 +82,38 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
 
         from scipy.optimize import curve_fit
 
-        hist, bin_edges = np.histogram(pedestal,bins=25)
+        hist, bin_edges = np.histogram(pedestal, bins=25)
         bin_centres = (bin_edges[:-1] + bin_edges[1:])/2
         
         p0 = [len(pedestal), np.mean(pedestal), np.std(pedestal)]
         coeff, var_matrix = curve_fit(gauss, bin_centres, hist, p0=p0)
         hist_fit = gauss(bin_centres, *coeff)
         
-        plt.hist(pedestal,bins=25)
-        plt.plot(bin_centres,hist_fit,'r')
-        plt.plot([coeff[1]-4*coeff[2],coeff[1]-4*coeff[2]],[0.,2000000],'g',linewidth=2.)
-        plt.plot([coeff[1]+4*coeff[2],coeff[1]+4*coeff[2]],[0.,2000000],'g',linewidth=2.)
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.errorbar(bin_centres, hist, yerr=np.sqrt(hist), drawstyle='steps-mid')
+        ax.plot(bin_centres,hist_fit,'r')
+        ax.axvline(coeff[1]-4*coeff[2], ymin=0., ymax=1.0, color='g',linewidth=2.)
+        ax.axvline(coeff[1]+4*coeff[2], ymin=0., ymax=1.0, color='g',linewidth=2.)
         #plt.yscale('log')
-        plt.title("value of the non-signal")
+        ax.set_title("value of the non-signal")
 
         print "\n\n\n***********************\n\n"
-        print "Pedestal cut threshold: ",coeff[1]-4*coeff[2]
+        print "Pedestal cut threshold: ", coeff[1]-4*coeff[2]
         print "\n\n***********************\n\n\n"
         plt.show()
+        plt.close('all')
 
 
     pedestal = np.median(pedestal)
     signal = signal-pedestal*(signal_mask)
     
     if debug:
-        plt.plot(time,signal,'orange')#[0:10000],signal[0:10000],'orange')
-        plt.plot(time,signal,'bo')
-        plt.title('data below threshold, minus pedestal')
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.plot(time,signal,'orange')
+        ax.plot(time,signal,'bo')
+        ax.set_title('data below threshold, minus pedestal')
         plt.show()
+        plt.close('all')
 
     # Clean signal mask
     #--------------------------------------------------------------------
@@ -137,11 +151,13 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     selected_pulse[pt]=True
 
     if debug:
-        plt.plot(time,Y,'r')
-        plt.plot(time,-0.005*selected_pulse[1:-1])
-        plt.plot(time,Y*selected_pulse[1:-1],'go')
-        plt.title("Pulses selected")
+        fig, ax = plt.subplots(figsize=(8,8))
+        ax.plot(time,Y,'r')
+        ax.plot(time,-0.005*selected_pulse[1:-1])
+        ax.plot(time,Y*selected_pulse[1:-1],'go')
+        ax.set_title("Pulses selected")
         plt.show()
+        plt.close('all')
 
             
     # Now, selected_pulse is the cleaned signal mask that only
@@ -157,6 +173,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     # print all pulses infividually
     # Save them in a file if need be (for pulse shape averaging)
     if debug:
+        fig, ax = plt.subplots(figsize=(8,8))
         max_samp = 20
         traces = []
         for element in pulses:
@@ -169,19 +186,21 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
                 
                 
             if sum(element)!=0:
-                print "charge of this pulse:",sum(element)
+                print "charge of this pulse:",sum(element*sample_res_ns/impedance*1000)
                 print "length of this pulse: ",len(element)
-                plt.plot(element,'bo')
-                plt.plot(element,'g')
+                ax.plot(element,'bo')
+                ax.plot(element,'g')
+
                 #traces.append(element)
         #import pickle
         #pickle.dump(traces,open("list_of_traces_%i.p"%n,"wb"))
         #print "saved traces in list_of_traces.p"
-                        
+        plt.show()
+        plt.close('all')
                         
 
 
-    charge = np.array([sum(x) for x in pulses])
+    charge = np.array([sum(x*sample_res_ns/impedance*1000) for x in pulses])
     charge = charge[charge!=0]
     
     # The pulse time tag is defined as the sample time of the first

@@ -125,7 +125,7 @@ if __name__=='__main__':
 
     parser.add_argument('--tstring',type=int,help='target string',default=3)
     parser.add_argument('--tom',type=int,help='target OM',default=40)
-    parser.add_argument('--debug',default=False)
+    parser.add_argument('--debug',help='debug flag', action='store_true')
 
     args = parser.parse_args()
 

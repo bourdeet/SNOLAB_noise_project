@@ -13,18 +13,32 @@
 
 
 
-def harvest_calibrated_waveforms(inputfile,outputfile,digitizer,targets=None):
-    print "harvesting ",inputfile,"..."
-    import sys
-    sys.path.append("./utils")
+def harvest_calibrated_waveforms(inputfile, outputfile, digitizer, targets=None, debug=False):
+    '''
+    Inputs
+    --------
+    inputfile: str (name of an i3 file)
+
+    outputfile: str (name of a vzp file)
+
+    digitizer: str (type of digitization to use: ATWD or FADC)
+
+    targets: str (name of a .py file containing a list of Tuples called target)
+
+    debug: bool (debug flag)
+    '''
+    print("harvesting ",inputfile,"...")
     import numpy as np
     from icecube.icetray import OMKey,I3Units
     from icecube import dataclasses,simclasses
     from icecube import dataio
     import pickle
 
+    if debug:
+        import matplotlib.pyplot as plt
 
-    exec("from %s import targets"%(args.targets.split('.')[-2].split('/')[-1]))
+
+    exec("from utils.%s import targets"%(args.targets.split('.')[-2].split('/')[-1]))
     #convert tuples into OMKey objects
     targets_key=[]
     for e in targets:
@@ -65,12 +79,18 @@ def harvest_calibrated_waveforms(inputfile,outputfile,digitizer,targets=None):
                         waveforms[pmt]['n_HLC']+=1.
                     
                         if str(h.source)==digitizer:
-
-                            waveform = h.waveform
-                            # suppress the last point of the trace
-                            waveform[-1]=0.
+                            #
+                            # Store the waveform information
+                            # Note: waveforms at this stage give positive pulses
+                            #
                             waveforms[pmt]['traces'].append(h.waveform)
                             waveforms[pmt]['times'].append(h.time)
+                            if debug:
+                                plt.plot(np.array(h.waveform)/I3Units.mV)
+                                plt.xlabel('sample #')
+                                plt.ylabel('Waveform signal (mV)')
+                                plt.show()
+
 
                             
                         # Deadtime calculations
@@ -158,13 +178,15 @@ if __name__=='__main__':
                         help="filename containing the list of target DOMs.",
                         default = "utils/target_original.py")
 
+    parser.add_argument('--debug',help='debug flag', action='store_true')
     args = parser.parse_args()
 
 
     harvest_calibrated_waveforms(inputfile  = args.input_file,
                                  outputfile = args.output_file,
                                  digitizer  = args.digitizer,
-                                 targets    = args.targets)
+                                 targets    = args.targets,
+                                 debug      = args.debug)
 
 
-    print "*********PROGRAM COMPLETED**********"
+    print("*********PROGRAM COMPLETED**********")
