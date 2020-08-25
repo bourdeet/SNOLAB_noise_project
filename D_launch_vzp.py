@@ -42,7 +42,7 @@ if __name__=='__main__':
 
     parser.add_argument('--target',
                         help="name of the list containing target DOMs",
-                        default="utils/target_original.py")
+                        default="utils/vuvuzela_properties_m10.py")
 
     args = parser.parse_args()
 
@@ -56,7 +56,7 @@ if __name__=='__main__':
     else:
         files_to_process = sorted(glob.glob(args.inputdir+"/*.vzp"))
 
-    bash_directory=args.inputdir+"/job_submit/"
+    bash_directory=args.outputdir+"/job_submit/"
         
     if not os.path.exists(bash_directory):
         print("creating new bash job folder...")
@@ -69,7 +69,7 @@ if __name__=='__main__':
     ############################
 
     #Hardcoded list of doms to harvest, this should be changed sometimes...
-    exec("from utils.%s import targets"%(args.target.split('.')[-2].split('/')[-1]))
+    exec("from utils.%s import targets"%(args.target.split('.')[0].split('/')[-1]))
 
     for OM in targets:
 

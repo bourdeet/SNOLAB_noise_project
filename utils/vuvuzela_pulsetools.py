@@ -12,7 +12,6 @@
 
 import numpy as np
 
-from pulsetools import PMT_DAQ_sequence
 from pulsetools import compute_pedestal
 from pulsetools import gauss
 
@@ -200,7 +199,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
                         
 
 
-    charge = np.array([sum(x*sample_res_ns/impedance*1000) for x in pulses])
+    charge = np.array([sum(x) for x in pulses]) #*sample_res_ns/impedance*1000
     charge = charge[charge!=0]
     
     # The pulse time tag is defined as the sample time of the first

@@ -10,6 +10,8 @@
 # scripts that work on previously saved pickle file of
 # an oscilloscope run
 #
+# Script also works on snolabified vuvuzela simulation
+#
 #######################################################
 
 import numpy as np

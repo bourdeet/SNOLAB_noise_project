@@ -56,8 +56,8 @@ def plot_charge_vs_time(doms_to_plot=None, combined_results=None, output_pdf=Non
     # Set up the main grid pf plots
     #=========================================================
     S = 5 # number of columns per plot
-    gs = gridspec.GridSpec(3,3*S+1,wspace=3.0,hspace=0.4)
-    f = plt.figure(figsize=(15,10))
+    gs = gridspec.GridSpec(3, 3*S+1, wspace=3.0, hspace=0.4)
+    f = plt.figure(figsize=(15, 10))
     
     print("Creating Qpairs plots...")
 
@@ -74,16 +74,16 @@ def plot_charge_vs_time(doms_to_plot=None, combined_results=None, output_pdf=Non
         dom_data =  combined_results[ID]
         LVT = dom_data['livetime']
     
-        pc = Ax[i].pcolormesh(np.transpose(X_dt), np.transpose(Y_Q), dom_data['Qpairs']/LVT,vmax=5)
-        Ax[i].plot(x_center,dom_data['Qpairs_med'],'k',linewidth=2.,label='median')
-        Ax[i].plot(x_center,dom_data['Qpairs_avg'],'c',linewidth=2.,label='avg')
-        Ax[i].plot(x_center,np.ones(len(x_center))*2.0,'w--',linewidth=3.0)
+        pc = Ax[i].pcolormesh(np.transpose(X_dt), np.transpose(Y_Q), dom_data['Qpairs']/LVT, vmax=5, cmap='jet')
+        Ax[i].plot(x_center, dom_data['Qpairs_med'], 'k', linewidth=2., label='median')
+        Ax[i].plot(x_center, dom_data['Qpairs_avg'], 'c', linewidth=2., label='avg')
+        Ax[i].plot(x_center, np.ones(len(x_center))*2.0, 'w--', linewidth=3.0)
         plt.legend()
     
         Ax[i].set_title(dom_data['title'])
         Ax[i].set_xlabel('log10(dt)')
         Ax[i].set_ylabel('charge of the pulse pair (pe)')
-        Ax[i].yaxis.set_label_coords(-0.07,0.5)
+        Ax[i].yaxis.set_label_coords(-0.07, 0.5)
 
 
     axes = plt.subplot(gs[:,3*S])
@@ -103,25 +103,25 @@ def plot_charge_ratio_v_time(doms_to_plot=None, combined_results=None, output_pd
     from utils.plotting_standards import X_dt, Y_Q, x_center
 
     S = 5 # number of columns per plot
-    gs = gridspec.GridSpec(3,3*S+1,wspace=2.0,hspace=0.4)
-    f = plt.figure(figsize=(15,10))
+    gs = gridspec.GridSpec(3,3*S+1, wspace=2.0, hspace=0.4)
+    f = plt.figure(figsize=(15, 10))
 
     print("Creating Qratio plots...")
 
     Ax = [None]*9
     for i in range(0,9):
         
-        Ax[i] = plt.subplot(gs[i/3,(i%3*S):(i%3*S)+S])
+        Ax[i] = plt.subplot(gs[i/3, (i%3*S):(i%3*S)+S])
 
         ID = doms_to_plot[i]['name']
         qpair = doms_to_plot[i]['qpair']
         dom_data =  combined_results[ID]
         LVT = dom_data['livetime']
         
-        pc = Ax[i].pcolormesh(np.transpose(X_dt), np.transpose(Y_Q), dom_data['Qratio']/LVT,vmax=5)
-        Ax[i].plot(x_center,dom_data['Qratio_med'],'k',linewidth=2.,label='median')
-        Ax[i].plot(x_center,dom_data['Qratio_avg'],'c',linewidth=2.,label='avg')
-        Ax[i].plot(x_center,np.ones(len(x_center)),'w--',linewidth=3.0)
+        pc = Ax[i].pcolormesh(np.transpose(X_dt), np.transpose(Y_Q), dom_data['Qratio']/LVT, vmax=5, cmap='jet')
+        Ax[i].plot(x_center, dom_data['Qratio_med'], 'k', linewidth=2., label='median')
+        Ax[i].plot(x_center, dom_data['Qratio_avg'], 'c', linewidth=2., label='avg')
+        Ax[i].plot(x_center, np.ones(len(x_center)), 'w--', linewidth=3.0)
         plt.legend()
     
         Ax[i].set_title(dom_data['title'])
@@ -148,10 +148,10 @@ def plot_burst_properties(doms_to_plot=None, combined_results=None, output_pdf=N
 
 
     S = 5 # number of columns per plot
-    gs = gridspec.GridSpec(3,3*S+1,wspace=2.0,hspace=0.4)
+    gs = gridspec.GridSpec(3,3*S+1, wspace=2.0, hspace=0.4)
     f = plt.figure(figsize=(15,10))
 
-    print "Creating Burst properties plots..."
+    print("Creating Burst properties plots...")
 
     Ax = [None]*9
     for i in range(0,9):
@@ -163,7 +163,7 @@ def plot_burst_properties(doms_to_plot=None, combined_results=None, output_pdf=N
         LVT = dom_data['livetime']
         
         pc = Ax[i].pcolormesh(np.transpose(X_ppb), np.transpose(Y_bl),
-                              dom_data['burst2D']/LVT,norm=LogNorm())
+                              dom_data['burst2D']/LVT, norm=LogNorm(), cmap='jet')
     
         Ax[i].set_title(dom_data['title'])
         Ax[i].set_ylabel(r'Duration of burst ($\mu s$)')
@@ -184,10 +184,10 @@ def plot_burst_durations(doms_to_plot=None, combined_results=None, output_pdf=No
     from utils.plotting_standards import edges_ppb
 
     S = 1 # number of columns per plot
-    gs = gridspec.GridSpec(3,3*S,wspace=0.2,hspace=0.4)
+    gs = gridspec.GridSpec(3,3*S, wspace=0.2, hspace=0.4)
     f = plt.figure(figsize=(15,10))
 
-    print "Creating Burst length plots..."
+    print("Creating Burst length plots...")
 
     Ax = [None]*9
     for i in range(0,9):
@@ -223,10 +223,10 @@ def plot_charge_distribution(doms_to_plot=None, combined_results=None, output_pd
     from utils.plotting_standards import binning_charge
 
     S = 1 # number of columns per plot
-    gs = gridspec.GridSpec(3,3*S,wspace=0.2,hspace=0.4)
+    gs = gridspec.GridSpec(3,3*S, wspace=0.2, hspace=0.4)
     f = plt.figure(figsize=(15,10))
 
-    print "Creating charge distribution plots..."
+    print("Creating charge distribution plots...")
 
     Ax = [None]*9
     for i in range(0,9):
@@ -237,14 +237,15 @@ def plot_charge_distribution(doms_to_plot=None, combined_results=None, output_pd
         dom_data =  combined_results[ID]
         LVT = dom_data['livetime']
         
-        pc = Ax[i].hist(dom_data['charge'],bins=np.linspace(0.,5,45),
+        pc = Ax[i].hist(dom_data['charge'],bins=binning_charge,
                         weights=np.ones(len(dom_data['charge']))/LVT,
-                        color='r',alpha=0.5)
+                        color='r', alpha=0.5)
     
         Ax[i].set_title(dom_data['title'])
         Ax[i].set_xlabel('charge (pe)')
         Ax[i].set_ylabel('Rate (Hz)')
         Ax[i].yaxis.set_label_coords(-0.1,0.5)
+        Ax[i].set_xlim([0.,3.0])
         
     if output_pdf is not None:        
         output_pdf.savefig()
@@ -257,10 +258,10 @@ def plot_log10dt_distribution(doms_to_plot=None, combined_results=None, output_p
     from utils.plotting_standards import binning_log10dt
 
     S = 1 # number of columns per plot
-    gs = gridspec.GridSpec(3,3*S,wspace=0.2,hspace=0.4)
+    gs = gridspec.GridSpec(3, 3*S, wspace=0.2, hspace=0.4)
     f = plt.figure(figsize=(15,10))
 
-    print "Creating Log10DT plots..."
+    print("Creating Log10DT plots...")
 
     Ax = [None]*9
     for i in range(0,9):
@@ -271,9 +272,9 @@ def plot_log10dt_distribution(doms_to_plot=None, combined_results=None, output_p
         dom_data =  combined_results[ID]
         LVT = dom_data['livetime']
         
-        pc = Ax[i].hist(dom_data['log10dt'],bins=binning_log10dt,
+        pc = Ax[i].hist(dom_data['log10dt'], bins=binning_log10dt,
                         weights=np.ones(len(dom_data['log10dt']))/LVT,
-                        color='g',alpha=0.5)
+                        color='g')
 
         if overlay_deadtime:
 
@@ -283,25 +284,29 @@ def plot_log10dt_distribution(doms_to_plot=None, combined_results=None, output_p
             Y2 = Y[Y==np.log10(50.e-9)]
             
             Ax2 = Ax[i].twinx()
-            Ax2.hist(Y1,bins=binning_log10dt,
-                     color='k',alpha=0.5)
+            Ax2.hist(Y1, bins=binning_log10dt,
+                     color='k', alpha=0.5)
             Ax2.get_yaxis().set_visible(False)
 
             Axb = Ax[i].twinx()
-            Axb.plot([np.log10(6400.e-9),np.log10(6400.e-9)],#427 for ATWD, 6400 for FADC
-                     [0.,1.],
-                     color='r',linewidth=2.00)
+            if args.digitizer.lower()=='fadc':
+                Axb.axvline(np.log10(6400.e-9), ymin=0, ymax=1, color='r', linewidth=2.)
+            else:
+                Axb.axvline(np.log10(427.e-9), ymin=0, ymax=1, color='r', linewidth=2.)
             Axb.get_yaxis().set_visible(False)
 
             Ax3 = Ax[i].twinx()
-            Ax3.hist(Y2,bins=binning_log10dt,
-                     color='r',alpha=0.5)
+            Ax3.hist(Y2, bins=binning_log10dt,
+                     color='r', alpha=0.5)
             Ax3.get_yaxis().set_visible(False)
 
         Ax[i].set_title(dom_data['title'])
         Ax[i].set_xlabel(r'log10($\Delta t$)')
         Ax[i].set_ylabel('Rate (Hz)')
-        Ax[i].yaxis.set_label_coords(-0.07,0.5)
+        if i/3==0:
+            Ax[i].yaxis.set_label_coords(-0.13, 0.5)
+        else:
+            Ax[i].yaxis.set_label_coords(-0.1, 0.5)
 
     if output_pdf is not None:        
         output_pdf.savefig()
@@ -315,7 +320,7 @@ if __name__=='__main__':
     import argparse
     from argparse import RawTextHelpFormatter
 
-    parser = argparse.ArgumentParser(description="pulse III - plot vuvuzela quantities",
+    parser = argparse.ArgumentParser(description="Make vuvuzela plots",
                                      formatter_class=RawTextHelpFormatter)
     
     parser.add_argument('--output',
@@ -356,11 +361,11 @@ if __name__=='__main__':
     import matplotlib.gridspec as gridspec
     from matplotlib.backends.backend_pdf import PdfPages
 
-    from pulse_II import parse_pseries, get_hist_stats
+    from utils.pulse_II import parse_pseries, get_hist_stats
 
     # Load the plotting attributes of the IceCube doms
     #========================================================================
-    exec("from utils.%s import *"%(args.targets))
+    exec("from utils.%s import *"%(args.targets.split('.')[0]))
     
 
 
@@ -383,7 +388,7 @@ if __name__=='__main__':
 
             combined_results[dom['name']]= {}
             combined_results[dom['name']]['title'] = titlename
-            pthreshold = dom['spe']*0.25
+            pthreshold = dom[args.digitizer.lower()+'_spe']*0.25
             burst_thresh = 1.e-6
         
             # Call the pulse_series parser

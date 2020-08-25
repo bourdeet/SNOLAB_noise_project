@@ -5,7 +5,7 @@
 #########################################
 from collections import OrderedDict
 
-def load_data_vzp(inputname,threshold,target_string=3,target_om=39,debug=False):
+def load_data_vzp(inputname, threshold=None, target_string=None, target_om=None, debug=False):
 
     import pickle
     import numpy as np
@@ -13,15 +13,18 @@ def load_data_vzp(inputname,threshold,target_string=3,target_om=39,debug=False):
     from utils.vuvuzela_pulsetools import find_pulses_array
     
     #********** Raw data shows positive pulses ********
+    nframes, alldoms_data = pickle.load(open(inputname))
 
+    key = OMKey(target_string, target_om)
 
-    data = pickle.load(open(inputname))
-
-    nframes = data[0]
-    key = OMKey(target_string,target_om)
-
-    good_data = data[1][key]
+    if key not in alldoms_data.keys():
+        print('ERROR: key {0} is not in the data recorded'.format(key))
+        print('available keys are:')
+        for k in sorted(alldoms_data.keys()):
+            print(k)
+        raise Exception
     
+    good_data = alldoms_data[key]
     X = np.array(good_data['times'])*1.e-9 # convert into seconds
     Y = np.hstack(good_data['traces'])
     digitizer = good_data['type']
@@ -44,7 +47,6 @@ def load_data_vzp(inputname,threshold,target_string=3,target_om=39,debug=False):
         sys.exit("ERROR: digitizer type unknown")
 
 
-    
     # The data is stored as a list of continuous waveform hits
     # that does not take into account the number of frames that
     # were in the file. We have to manually assemble sequences
@@ -79,12 +81,13 @@ def load_data_vzp(inputname,threshold,target_string=3,target_om=39,debug=False):
         selected_times = np.tile(np.arange(0,nsamples)*D['HORIZ_INTERVAL'],len(t))+np.repeat(t,nsamples)
         
         
-        charge,times = find_pulses_array(selected_times,-(selected_trace/I3Units.mV),D,
+        charge, times = find_pulses_array(selected_times,-(selected_trace/I3Units.mV),D,
                                          sequence_time = selected_times,
                                          threshold=threshold,
                                          Nsample=nsamp_for_pulse,
                                          debug=debug)
-        
+        print(charge)
+
         seq_info=OrderedDict()
         seq_info['mode']='sequence'
         seq_info['charge']=charge
@@ -107,11 +110,11 @@ if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser('Find pulses in vuvuzela waveforms.')
 
-    parser.add_argument('--input-file',
-                        help='input file name containing calibrated waveforms',
+    parser.add_argument('-i', '--input-file',
+                        help='input .vzp file name containing vuvuzela waveforms',
                         default='something_calibrated.vzp')
     
-    parser.add_argument('--output-file',
+    parser.add_argument('-o', '--output-file',
                         help='output pickle file with the sequences',
                         default="some_sequence.p")
 
@@ -141,4 +144,4 @@ if __name__=='__main__':
     import pickle
     pickle.dump([sequences,file_deadtime],open(args.output_file,"wb"))
 
-    print "*********PROGRAM COMPLETED**********"
+    print("*********PROGRAM COMPLETED**********")
