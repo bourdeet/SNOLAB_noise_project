@@ -16,9 +16,18 @@ from pulsetools import compute_pedestal
 from pulsetools import gauss
 
 
-def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=False,n=0):
+def find_pulses_array(X,Y,D,sequence_time=None, threshold=None, Nsample=10, debug=False, n=0):
     '''
-    slightly modified version of the pulse finder that does not use impedance info
+    Locate valid pulses in a waveform.
+
+    Inputs:
+    -------
+
+    X: ndarray (time values of the waveform)
+
+    Y: ndarray (signal values of the waveform)
+
+    D: dict (metadata about the waveform: impedance, y and x scales, etc.)
 
     '''
     if debug:
@@ -38,7 +47,7 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
         time = sequence_time
 
     # Acquire information from the header:
-    sample_res_ns = D['HORIZ_INTERVAL']/1e-9
+    sample_res_ns = D['HORIZ_INTERVAL']/1.e-9
     impedance = float(D['VERT_COUPLING'].split('_')[1])
 
     
@@ -46,9 +55,13 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
         print("vertical: ", D['VERTUNIT'])
         print("impedance: ", impedance)
         print('sample_resolution: ', sample_res_ns, 'ns')
+        print('type of the signal: ', type(Y[0]))
+
         fig, ax = plt.subplots(figsize=(8,8))
         ax.plot(time,Y,'r')
         ax.set_title('data, adjusted timing')
+        ax.set_ylabel('Signal ({})'.format(D['VERTUNIT']))
+        ax.set_xlabel('Time ({})'.format(D['HORUNIT']))
         plt.show()
         plt.close('all')
         
@@ -65,6 +78,8 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
         ax.plot(time,signal,'r')#[0:10000],signal[0:10000],'r')
         ax.plot(time,signal,'bo')
         ax.set_title('data below threshold')
+        ax.set_ylabel('Signal ({})'.format(D['VERTUNIT']))
+        ax.set_xlabel('Time ({})'.format(D['HORUNIT']))
         plt.show()
         plt.close('all')
 
@@ -95,10 +110,11 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
         ax.axvline(coeff[1]+4*coeff[2], ymin=0., ymax=1.0, color='g',linewidth=2.)
         #plt.yscale('log')
         ax.set_title("value of the non-signal")
+        ax.set_xlabel('baseline value ({})'.format(D['VERTUNIT']))
 
-        print "\n\n\n***********************\n\n"
-        print "Pedestal cut threshold: ", coeff[1]-4*coeff[2]
-        print "\n\n***********************\n\n\n"
+        print("\n\n\n***********************\n\n")
+        print("Pedestal cut threshold: ", coeff[1]-4*coeff[2])
+        print("\n\n***********************\n\n\n")
         plt.show()
         plt.close('all')
 
@@ -111,6 +127,8 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
         ax.plot(time,signal,'orange')
         ax.plot(time,signal,'bo')
         ax.set_title('data below threshold, minus pedestal')
+        ax.set_ylabel('Signal ({})'.format(D['VERTUNIT']))
+        ax.set_xlabel('Time ({})'.format(D['HORUNIT']))
         plt.show()
         plt.close('all')
 
@@ -152,8 +170,10 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     if debug:
         fig, ax = plt.subplots(figsize=(8,8))
         ax.plot(time,Y,'r')
-        ax.plot(time,-0.005*selected_pulse[1:-1])
+        ax.plot(time,-selected_pulse[1:-1])
         ax.plot(time,Y*selected_pulse[1:-1],'go')
+        ax.set_ylabel('Signal ({})'.format(D['VERTUNIT']))
+        ax.set_xlabel('Time ({})'.format(D['HORUNIT']))
         ax.set_title("Pulses selected")
         plt.show()
         plt.close('all')
@@ -173,6 +193,8 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
     # Save them in a file if need be (for pulse shape averaging)
     if debug:
         fig, ax = plt.subplots(figsize=(8,8))
+        ax.set_ylabel('Signal ({})'.format(D['VERTUNIT']))
+        ax.set_xlabel('Sample #')
         max_samp = 20
         traces = []
         for element in pulses:
@@ -185,12 +207,12 @@ def find_pulses_array(X,Y,D,sequence_time=None,threshold=-0.1,Nsample=10,debug=F
                 
                 
             if sum(element)!=0:
-                print "charge of this pulse:",sum(element*sample_res_ns/impedance*1000)
-                print "length of this pulse: ",len(element)
+                print("charge of this pulse:",sum(element*sample_res_ns/impedance*1000))
+                print("length of this pulse: ",len(element))
                 ax.plot(element,'bo')
                 ax.plot(element,'g')
 
-                #traces.append(element)
+
         #import pickle
         #pickle.dump(traces,open("list_of_traces_%i.p"%n,"wb"))
         #print "saved traces in list_of_traces.p"

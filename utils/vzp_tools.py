@@ -2,8 +2,26 @@
 #########################################
 # tools to read and format .vzp data
 # (ie waveforms from IceCube HLC events)
+#
+# Retrieves the sequences of pulses from 
+# a specific DOM, for a specific digitizer
+# channel
+#
+# author: Etienne Bourbeau 
+#        (etienne.bourbeau@icecube.wisc.edu)
+#
 #########################################
+
+
 from collections import OrderedDict
+
+# Default threshold level that will define
+# what qualifies as a pulse in each type
+# of waveforms
+#
+THRESHOLD = OrderedDict()
+THRESHOLD['FADC'] = -0.15
+THRESHOLD['ATWD'] = -0.3
 
 def load_data_vzp(inputname, threshold=None, target_string=None, target_om=None, debug=False):
 
@@ -35,6 +53,7 @@ def load_data_vzp(inputname, threshold=None, target_string=None, target_om=None,
     D = {}
     D['VERT_COUPLING'] = 'DC_1_OHM'
     D['VERTUNIT'] = 'mV'
+    D['HORUNIT'] = 's'
     if digitizer=='ATWD':
         D['HORIZ_INTERVAL'] = 3.3e-9
         nsamples = 128
@@ -122,10 +141,6 @@ if __name__=='__main__':
                         help='choose the digitizer type: ATWD or FADC',
                         default='ATWD')
 
-    parser.add_argument('--threshold',
-                        help='choose the pulse_detection threshold',
-                        default=-0.5,type=float)
-
     parser.add_argument('--tstring',type=int,help='target string',default=3)
     parser.add_argument('--tom',type=int,help='target OM',default=40)
     parser.add_argument('--debug',help='debug flag', action='store_true')
@@ -135,7 +150,7 @@ if __name__=='__main__':
     print("processing file: ", args.input_file)
     
     sequences,file_deadtime = load_data_vzp(inputname = args.input_file,
-                                            threshold = args.threshold,
+                                            threshold = THRESHOLD[args.digitizer.upper()],
                                             target_string=args.tstring,
                                             target_om=args.tom,
                                             debug = args.debug)
